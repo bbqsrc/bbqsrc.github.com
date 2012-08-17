@@ -14,17 +14,9 @@
     notchWidth: 10,
     _mouseState: false,
     _mousePosition: function(node, e) {
-      var mousePos, x, y;
-      mousePos = h337.util.mousePosition(e);
-      if (mousePos == null) {
-        return [0, 0];
-      }
-      x = mousePos[0];
-      y = mousePos[1];
-      if (e.target !== node) {
-        x -= $(node).offset().left;
-        y -= $(node).offset().top;
-      }
+      var x, y;
+      x = parseInt(e.pageX - $(node).offset().left, 10);
+      y = parseInt(e.pageY - $(node).offset().top, 10);
       x = Math.max(0, Math.min(x, node.width));
       y = Math.max(0, Math.min(y, node.height));
       return [x, y];
