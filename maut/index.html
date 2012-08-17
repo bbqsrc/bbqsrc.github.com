@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>MAUT Demo</title>
+		<style>
+.maut {
+	border-collapse: collapse;
+	border: 1px solid black;
+}
+
+.maut td, .maut th {
+	text-align: center;
+}
+
+.maut th {
+	border: 1px solid black;
+	padding: 0.3em;
+}
+
+.maut td {
+	border: 1px dotted gray;
+}
+
+.maut td:hover {
+	background-color: #eee;
+}
+
+.maut td label {
+	display: block;
+}
+		</style>
+		<script src="../jquery-1.7.2.min.js"></script>
+		<script src="../underscore.js"></script>
+		<script src="../backbone.js"></script>
+		<script src="maut.js"></script>
+		<script>
+$(function() {		
+	window.x = new MAUT({
+		issues: ["First issue", "Second issue", "Third issue", "Fourth issue"],
+		solutions: ["Kill everyone", "Don't kill everyone", "Eat first"]
+	});
+	$('body').append(x.render().el);
+
+	window.colinput = $("<input>");
+	window.colbutton = $("<button>Add column</button>");
+	
+	window.rowinput = $("<input>");
+	window.rowbutton = $("<button>Add row</button>");
+
+	$('body').append('<br>').append(colinput).append(colbutton);
+	colbutton.click(function() {
+		x.addSolution(colinput.val());
+		x.render();
+	});
+	$('body').append('<br>').append(rowinput).append(rowbutton);
+	rowbutton.click(function() {
+		x.addIssue(rowinput.val());
+		x.render();
+	});
+});
+	</script>
+	</head>
+	<body>
+	</body>
+</html>
