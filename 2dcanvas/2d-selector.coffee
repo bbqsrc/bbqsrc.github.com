@@ -10,7 +10,21 @@ _.templateSettings =
 	notchWidth: 10
 
 	_mouseState: false
-	
+	_mousePosition: (node, e) ->
+		mousePos = h337.util.mousePosition(e)
+		return [0, 0] unless mousePos?
+		x = mousePos[0]
+		y = mousePos[1]
+		
+		if e.target != node
+			x -= $(node).offset().left
+			y -= $(node).offset().top
+
+		x = Math.max(0, Math.min(x, node.width))
+		y = Math.max(0, Math.min(y, node.height))
+		
+		return [x, y]
+
 	template: _.template("""
 		<canvas class='bg' height="{{height}}" width="{{width}}"></canvas>
 		<canvas class='fg' height="{{height}}" width="{{width}}"></canvas>
@@ -65,11 +79,7 @@ _.templateSettings =
 		node = @$(".fg")[0]
 		ctx = node.getContext('2d')
 		
-		mousePos = h337.util.mousePosition(e)
-		return unless mousePos?
-		x = Math.max(0, Math.min(mousePos[0], node.width))
-		y = Math.max(0, Math.min(mousePos[1], node.height))
-
+		[x, y] = @_mousePosition(node, e)
 		ctx.clearRect(0, 0, node.width, node.height)
 		ctx.beginPath()
 		ctx.moveTo(x-@dotSize, y)

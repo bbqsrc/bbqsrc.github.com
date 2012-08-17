@@ -13,6 +13,22 @@
     notchSpacing: 10,
     notchWidth: 10,
     _mouseState: false,
+    _mousePosition: function(node, e) {
+      var mousePos, x, y;
+      mousePos = h337.util.mousePosition(e);
+      if (mousePos == null) {
+        return [0, 0];
+      }
+      x = mousePos[0];
+      y = mousePos[1];
+      if (e.target !== node) {
+        x -= $(node).offset().left;
+        y -= $(node).offset().top;
+      }
+      x = Math.max(0, Math.min(x, node.width));
+      y = Math.max(0, Math.min(y, node.height));
+      return [x, y];
+    },
     template: _.template("<canvas class='bg' height=\"{{height}}\" width=\"{{width}}\"></canvas>\n<canvas class='fg' height=\"{{height}}\" width=\"{{width}}\"></canvas>"),
     generateBackground: function() {
       var ctx, end, height, i, j, node, origin, start, width;
@@ -51,16 +67,11 @@
       ctx.stroke();
     },
     setCrosshair: function(e) {
-      var ctx, mousePos, node, x, y;
+      var ctx, node, x, y, _ref;
       e.preventDefault();
       node = this.$(".fg")[0];
       ctx = node.getContext('2d');
-      mousePos = h337.util.mousePosition(e);
-      if (mousePos == null) {
-        return;
-      }
-      x = Math.max(0, Math.min(mousePos[0], node.width));
-      y = Math.max(0, Math.min(mousePos[1], node.height));
+      _ref = this._mousePosition(node, e), x = _ref[0], y = _ref[1];
       ctx.clearRect(0, 0, node.width, node.height);
       ctx.beginPath();
       ctx.moveTo(x - this.dotSize, y);
