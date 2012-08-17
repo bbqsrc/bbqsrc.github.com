@@ -152,7 +152,7 @@ _.templateSettings =
 		
 		@_heatmap = h337.create
 			element: @el
-			radius: 15
+			radius: 8
 			visible: false
 		@_heatmap.get('canvas').style.zIndex = 0
 		return @

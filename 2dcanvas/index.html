@@ -11,11 +11,6 @@
 	left: 0;
 }
 
-.crosshair-selector > canvas {
-	height: 200px;
-	width: 200px;
-}
-
 .crosshair-selector > .bg {
 	opacity: 0.15;
 }
@@ -52,7 +47,7 @@
 		<script src="2d-selector.js"></script>
 		<script>
 $(function() {		
-	window.x = new CrosshairSelector({height: 200, width: 200});
+	window.x = new CrosshairSelector({height: 100, width: 100});
 	$('body').append(x.render().el);
 
 	window.checkbox = $("<label><input type='checkbox'> Show heatmap</label>")

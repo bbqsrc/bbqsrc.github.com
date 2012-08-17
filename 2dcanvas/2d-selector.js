@@ -159,7 +159,7 @@
       this.setGlobalEvents();
       this._heatmap = h337.create({
         element: this.el,
-        radius: 15,
+        radius: 8,
         visible: false
       });
       this._heatmap.get('canvas').style.zIndex = 0;
