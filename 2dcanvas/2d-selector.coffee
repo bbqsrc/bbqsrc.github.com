@@ -101,6 +101,7 @@ _.templateSettings =
 	events:
 		"mousedown": (e) ->
 			@_mouseState = true
+			$('body').append($('<div class="canvas-filter"></div>'))
 			@setCrosshair(e)
 			@setCoordText()
 	

@@ -94,6 +94,7 @@
     events: {
       "mousedown": function(e) {
         this._mouseState = true;
+        $('body').append($('<div class="canvas-filter"></div>'));
         this.setCrosshair(e);
         return this.setCoordText();
       }
