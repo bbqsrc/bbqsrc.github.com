@@ -12,7 +12,9 @@
     dotSize: 10,
     notchSpacing: 10,
     notchWidth: 10,
+    _bgState: true,
     _mouseState: false,
+    _lastColourPoint: "#000000",
     _mousePosition: function(node, e) {
       var x, y;
       x = parseInt(e.pageX - $(node).offset().left, 10);
@@ -21,14 +23,29 @@
       y = Math.max(0, Math.min(y, node.height));
       return [x, y];
     },
-    template: _.template("<div class=\"green-to-red\" style=\"height: {{height}}px; width: {{width}}px\"></div>\n<div class=\"trans-to-white\" style=\"height: {{height}}px; width: {{width}}px\"></div>\n<canvas class='bg' height=\"{{height}}\" width=\"{{width}}\"></canvas>\n<canvas class='fg' height=\"{{height}}\" width=\"{{width}}\"></canvas>"),
-    generateBackground: function() {
+    _getImageData: function(ctx, node, e) {
+      var b, g, r, x, y, _ref, _ref1;
+      _ref = this._mousePosition(node, e), x = _ref[0], y = _ref[1];
+      x = Math.max(0, Math.min(x, node.width - 1));
+      y = Math.max(0, Math.min(y, node.height - 1));
+      _ref1 = ctx.getImageData(x, y, 1, 1).data, r = _ref1[0], g = _ref1[1], b = _ref1[2];
+      return "rgb(" + r + "," + g + "," + b + ")";
+    },
+    template: _.template("<canvas class='bg' height=\"{{height}}\" width=\"{{width}}\"></canvas>\n<canvas class='ch' height=\"{{height}}\" width=\"{{width}}\"></canvas>\n<canvas class='fg' height=\"{{height}}\" width=\"{{width}}\"></canvas>"),
+    generateCross: function() {
       var ctx, end, height, i, j, node, origin, start, width;
-      node = this.$('.bg')[0];
+      node = this.$('.ch')[0];
       ctx = node.getContext('2d');
       height = node.height;
       width = node.width;
       origin = [node.width / 2, node.height / 2];
+      ctx.save();
+      ctx.clearRect(0, 0, node.width, node.height);
+      ctx.lineWidth = 2;
+      if (this._bgState) {
+        ctx.strokeStyle = this._lastColourPoint;
+      }
+      console.log(this._lastColourPoint);
       ctx.beginPath();
       ctx.moveTo(width / 2, 0);
       ctx.lineTo(width / 2, height);
@@ -57,14 +74,40 @@
         ctx.lineTo(end, j);
       }
       ctx.stroke();
+      ctx.restore();
+    },
+    generateBackground: function() {
+      var bg, ctx, height, horizontalGradient, origin, verticalGradient, width;
+      bg = this.$('.bg')[0];
+      ctx = bg.getContext('2d');
+      height = bg.height;
+      width = bg.width;
+      origin = [bg.width / 2, bg.height / 2];
+      horizontalGradient = ctx.createLinearGradient(0, 0, width, 0);
+      horizontalGradient.addColorStop(0, "#00ff00");
+      horizontalGradient.addColorStop(1, "#ff0000");
+      verticalGradient = ctx.createLinearGradient(0, 0, 0, height);
+      verticalGradient.addColorStop(0, "rgba(0,0,0,0)");
+      verticalGradient.addColorStop(1, "rgba(255,255,255,1)");
+      ctx.save();
+      ctx.fillStyle = horizontalGradient;
+      ctx.fillRect(0, 0, width, height);
+      ctx.fillStyle = verticalGradient;
+      ctx.fillRect(0, 0, width, height);
+      ctx.restore();
     },
     setCrosshair: function(e) {
-      var ctx, node, x, y, _ref;
+      var bg, bgCtx, ctx, fg, x, y, _ref;
       e.preventDefault();
-      node = this.$(".fg")[0];
-      ctx = node.getContext('2d');
-      _ref = this._mousePosition(node, e), x = _ref[0], y = _ref[1];
-      ctx.clearRect(0, 0, node.width, node.height);
+      fg = this.$(".fg")[0];
+      bg = this.$(".bg")[0];
+      ctx = fg.getContext('2d');
+      bgCtx = bg.getContext('2d');
+      _ref = this._mousePosition(fg, e), x = _ref[0], y = _ref[1];
+      this._lastColourPoint = this._getImageData(bgCtx, fg, e);
+      console.log(this._lastColourPoint);
+      this.generateCross();
+      ctx.clearRect(0, 0, fg.width, fg.height);
       ctx.beginPath();
       ctx.moveTo(x - this.dotSize, y);
       ctx.lineTo(x + this.dotSize, y);
@@ -78,21 +121,32 @@
       };
     },
     setCoordText: function() {
-      var availableWidth, node, textCtx, textSize;
-      node = this.$(".bg")[0];
+      var availableWidth, howMuchIAgree, howMuchICare, node, textCtx, textSize;
+      if (this.coords == null) {
+        return;
+      }
+      node = this.$(".ch")[0];
       textCtx = node.getContext('2d');
       textSize = node.height / 20;
       availableWidth = node.width / 2 - this.notchWidth / 2;
+      howMuchICare = node.width / 2 - this.coords.x;
+      howMuchIAgree = node.height - this.coords.y;
       textCtx.clearRect(0, 0, availableWidth, textSize * 2);
       textCtx.font = "" + textSize + "px monospace";
       textCtx.textBaseline = "top";
-      return textCtx.fillText("(" + this.coords.x + ", " + this.coords.y + ")", 3, 3);
+      return textCtx.fillText("(" + howMuchICare + ", " + howMuchIAgree + ")", 3, 3);
     },
     showBackground: function() {
-      return this.$("div").show();
+      this._bgState = true;
+      this.generateCross();
+      this.$(".bg").show();
+      return this.setCoordText();
     },
     hideBackground: function() {
-      return this.$("div").hide();
+      this._bgState = false;
+      this.generateCross();
+      this.$(".bg").hide();
+      return this.setCoordText();
     },
     showHeatmap: function() {
       return $(this._heatmap.get('canvas')).show();
@@ -161,6 +215,7 @@
         width: this.width
       });
       this.generateBackground();
+      this.generateCross();
       this.setGlobalEvents();
       this._heatmap = h337.create({
         element: this.el,

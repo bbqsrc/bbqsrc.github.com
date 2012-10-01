@@ -9,7 +9,9 @@ _.templateSettings =
 	notchSpacing: 10
 	notchWidth: 10
 
+	_bgState: true
 	_mouseState: false
+	_lastColourPoint: "#000000"
 	_mousePosition: (node, e) ->
 		# Firefox gives floats and not ints...
 		x = parseInt(e.pageX - $(node).offset().left, 10)
@@ -20,20 +22,32 @@ _.templateSettings =
 		
 		return [x, y]
 
+	_getImageData: (ctx, node, e) ->
+		[x, y] = @_mousePosition(node, e)
+		x = Math.max(0, Math.min(x, node.width-1))
+		y = Math.max(0, Math.min(y, node.height-1))
+		[r, g, b] = ctx.getImageData(x, y, 1, 1).data
+		
+		return "rgb(#{r},#{g},#{b})"
+
 	template: _.template("""
-		<div class="green-to-red" style="height: {{height}}px; width: {{width}}px"></div>
-		<div class="trans-to-white" style="height: {{height}}px; width: {{width}}px"></div>
 		<canvas class='bg' height="{{height}}" width="{{width}}"></canvas>
+		<canvas class='ch' height="{{height}}" width="{{width}}"></canvas>
 		<canvas class='fg' height="{{height}}" width="{{width}}"></canvas>
 	""")
 
-	generateBackground: ->
-		node = @$('.bg')[0]
+	generateCross: ->
+		node = @$('.ch')[0]
 		ctx = node.getContext('2d')
 		height = node.height
 		width = node.width
 		origin = [node.width/2, node.height/2]
 
+		ctx.save()
+		ctx.clearRect(0, 0, node.width, node.height)
+		ctx.lineWidth = 2
+		ctx.strokeStyle = @_lastColourPoint if @_bgState
+		console.log(@_lastColourPoint)
 		ctx.beginPath()
 		
 		# vertical line
@@ -68,16 +82,47 @@ _.templateSettings =
 			ctx.lineTo(end, j)
 	
 		ctx.stroke()
+		ctx.restore()
+		return
+
+	generateBackground: ->
+		bg = @$('.bg')[0]
+		ctx = bg.getContext('2d')
+		height = bg.height
+		width = bg.width
+		origin = [bg.width/2, bg.height/2]
+
+		# green to red horizontal gradient
+		horizontalGradient = ctx.createLinearGradient(0, 0, width, 0)
+		horizontalGradient.addColorStop(0, "#00ff00")
+		horizontalGradient.addColorStop(1, "#ff0000")
+		
+		# transparent to white vertical gradient
+		verticalGradient = ctx.createLinearGradient(0, 0, 0, height)
+		verticalGradient.addColorStop(0, "rgba(0,0,0,0)")
+		verticalGradient.addColorStop(1, "rgba(255,255,255,1)")
+		
+		ctx.save()
+		ctx.fillStyle = horizontalGradient
+		ctx.fillRect(0, 0, width, height)
+		ctx.fillStyle = verticalGradient
+		ctx.fillRect(0, 0, width, height)
+		ctx.restore()
 		return
 	
 	setCrosshair: (e) ->
 		e.preventDefault()
 		
-		node = @$(".fg")[0]
-		ctx = node.getContext('2d')
-		
-		[x, y] = @_mousePosition(node, e)
-		ctx.clearRect(0, 0, node.width, node.height)
+		fg = @$(".fg")[0]
+		bg = @$(".bg")[0]
+		ctx = fg.getContext('2d')
+		bgCtx = bg.getContext('2d')
+
+		[x, y] = @_mousePosition(fg, e)
+		@_lastColourPoint = @_getImageData(bgCtx, fg, e)
+		console.log(@_lastColourPoint)
+		@generateCross()
+		ctx.clearRect(0, 0, fg.width, fg.height)
 		ctx.beginPath()
 		ctx.moveTo(x-@dotSize, y)
 		ctx.lineTo(x+@dotSize, y)
@@ -89,21 +134,31 @@ _.templateSettings =
 		return @coords = {x: x, y: y}
 
 	setCoordText: ->
-		node = @$(".bg")[0]
+		return unless @coords?
+		node = @$(".ch")[0]
 		textCtx = node.getContext('2d')
 		textSize = node.height / 20
 		availableWidth = node.width/2 - @notchWidth/2
+		
+		howMuchICare = node.width/2 - @coords.x
+		howMuchIAgree = node.height - @coords.y
 
 		textCtx.clearRect(0, 0, availableWidth, textSize*2)
 		textCtx.font = "#{textSize}px monospace"
 		textCtx.textBaseline = "top"
-		textCtx.fillText("(#{@coords.x}, #{@coords.y})", 3, 3)
+		textCtx.fillText("(#{howMuchICare}, #{howMuchIAgree})", 3, 3)
 	
 	showBackground: ->
-		@$("div").show()
+		@_bgState = true
+		@generateCross()
+		@$(".bg").show()
+		@setCoordText()
 
 	hideBackground: ->
-		@$("div").hide()
+		@_bgState = false
+		@generateCross()
+		@$(".bg").hide()
+		@setCoordText()
 	
 	showHeatmap: ->
 		$(@_heatmap.get('canvas')).show()
@@ -157,6 +212,7 @@ _.templateSettings =
 			width: @width
 
 		@generateBackground()
+		@generateCross()
 		@setGlobalEvents()
 		
 		@_heatmap = h337.create
