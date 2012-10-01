@@ -12,6 +12,10 @@ _.templateSettings =
 	_bgState: true
 	_mouseState: false
 	_lastColourPoint: "#000000"
+	
+	_ensureBetween: (num, min, max) ->
+		return Math.max(min, Math.min(num, max))
+
 	_mousePosition: (node, e) ->
 		# Firefox gives floats and not ints...
 		x = parseInt(e.pageX - $(node).offset().left, 10)
@@ -22,21 +26,14 @@ _.templateSettings =
 		
 		return [x, y]
 
-	_getImageData: (ctx, node, e) ->
-		[x, y] = @_mousePosition(node, e)
-		x = Math.max(0, Math.min(x, node.width-1))
-		y = Math.max(0, Math.min(y, node.height-1))
+	_getImageData: (ctx, node) ->
+		x = Math.max(0, Math.min(@coords.x, node.width-1))
+		y = Math.max(0, Math.min(@coords.y, node.height-1))
 		[r, g, b] = ctx.getImageData(x, y, 1, 1).data
 		
 		return "rgb(#{r},#{g},#{b})"
 
-	template: _.template("""
-		<canvas class='bg' height="{{height}}" width="{{width}}"></canvas>
-		<canvas class='ch' height="{{height}}" width="{{width}}"></canvas>
-		<canvas class='fg' height="{{height}}" width="{{width}}"></canvas>
-	""")
-
-	generateCross: ->
+	_generateCross: ->
 		node = @$('.ch')[0]
 		ctx = node.getContext('2d')
 		height = node.height
@@ -84,7 +81,7 @@ _.templateSettings =
 		ctx.restore()
 		return
 
-	generateBackground: ->
+	_generateBackground: ->
 		bg = @$('.bg')[0]
 		ctx = bg.getContext('2d')
 		height = bg.height
@@ -109,19 +106,18 @@ _.templateSettings =
 		ctx.restore()
 		return
 	
-	setCrosshair: (e) ->
-		e.preventDefault()
-		
+	_setCrosshair: () ->
 		fg = @$(".fg")[0]
 		bg = @$(".bg")[0]
 		ctx = fg.getContext('2d')
 		bgCtx = bg.getContext('2d')
 
-		[x, y] = @_mousePosition(fg, e)
-		@_lastColourPoint = @_getImageData(bgCtx, fg, e)
-		@generateCross()
+		@_lastColourPoint = @_getImageData(bgCtx, fg)
+		@_generateCross()
 		ctx.clearRect(0, 0, fg.width, fg.height)
 		ctx.beginPath()
+		x = @coords.x
+		y = @coords.y
 		ctx.moveTo(x-@dotSize, y)
 		ctx.lineTo(x+@dotSize, y)
 		ctx.moveTo(x, y-@dotSize)
@@ -129,9 +125,13 @@ _.templateSettings =
 		ctx.stroke()
 		
 		@_heatmap.store.addDataPoint(x, y)
+		@_setCoordText()
+		return @coords
+
+	_setCoords: (x, y) ->
 		return @coords = {x: x, y: y}
 
-	setCoordText: ->
+	_setCoordText: ->
 		return unless @coords?
 		node = @$(".ch")[0]
 		textCtx = node.getContext('2d')
@@ -146,50 +146,42 @@ _.templateSettings =
 		textCtx.textBaseline = "top"
 		textCtx.fillText("(#{howMuchICare}, #{howMuchIAgree})", 3, 3)
 	
-	showBackground: ->
-		@_bgState = true
-		@generateCross()
-		@$(".bg").show()
-		@setCoordText()
-
-	hideBackground: ->
-		@_bgState = false
-		@generateCross()
-		@$(".bg").hide()
-		@setCoordText()
-	
-	showHeatmap: ->
-		$(@_heatmap.get('canvas')).show()
-	
-	hideHeatmap: ->
-		$(@_heatmap.get('canvas')).hide()
-
-	events:
-		"mousedown touchstart": (e) ->
-			@_mouseState = true
-			$('body').append($('<div class="canvas-filter"></div>'))
-			@$(".fg").addClass('moving')
-			@setCrosshair(e)
-			@setCoordText()
-	
-	setGlobalEvents: ->
+	_setGlobalEvents: ->
 		self = this
 
-		$(window).on "mouseup touchend", (e) ->
+		$(window).on "mouseup", (e) ->
 			((e) ->
 				return unless @_mouseState
 				@_mouseState = false
 				$(".canvas-filter").remove()
 			).call(self, e)
 
-		$(window).on "mousemove touchmove", (e) ->
+		$(window).on "mousemove", (e) ->
 			((e) ->
 				return unless @_mouseState
-				@setCrosshair(e)
-				@setCoordText()
+				e.preventDefault()
+				[x, y] = @_mousePosition(@$(".fg")[0], e)
+				@_setCoords(x, y)
+				@_setCrosshair()
 			).call(self, e)
 
 		return
+
+	events:
+		"mousedown": (e) ->
+			@_mouseState = true
+			$('body').append($('<div class="canvas-filter"></div>'))
+			@$(".fg").addClass('moving')
+			e.preventDefault()
+			[x, y] = @_mousePosition(@$(".fg")[0], e)
+			@_setCoords(x, y)
+			@_setCrosshair()
+	
+	template: _.template("""
+		<canvas class='bg' height="{{height}}" width="{{width}}"></canvas>
+		<canvas class='ch' height="{{height}}" width="{{width}}"></canvas>
+		<canvas class='fg' height="{{height}}" width="{{width}}"></canvas>
+	""")
 
 	initialize: (obj={}) ->
 		@height = parseInt(obj.height, 10) if obj.height?
@@ -198,6 +190,32 @@ _.templateSettings =
 		@notchSpacing = parseInt(obj.notchSpacing, 10) if obj.notchSpacing?
 		return
 
+	showBackground: ->
+		@_bgState = true
+		@$(".bg").show()
+		@_generateCross()
+
+	hideBackground: ->
+		@_bgState = false
+		@$(".bg").hide()
+		@_generateCross()
+	
+	showHeatmap: ->
+		$(@_heatmap.get('canvas')).show()
+	
+	hideHeatmap: ->
+		$(@_heatmap.get('canvas')).hide()
+
+	set: (agree, care) ->
+		node = @$(".ch")[0]
+		x_diff = node.width / 100
+		y_diff = node.height / 100
+		@coords =
+			x: node.width/2 - x_diff * @_ensureBetween(agree, -50, 50)
+			y: node.height - y_diff * @_ensureBetween(care, 0, 100)
+
+		@_setCrosshair()
+	
 	render: ->
 		@$el.empty().append(
 			@template(height: @height, width: @width)
@@ -209,9 +227,9 @@ _.templateSettings =
 			height: @height
 			width: @width
 
-		@generateBackground()
-		@generateCross()
-		@setGlobalEvents()
+		@_generateBackground()
+		@_generateCross()
+		@_setGlobalEvents()
 		
 		@_heatmap = h337.create
 			element: @el

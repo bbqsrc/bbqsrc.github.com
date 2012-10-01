@@ -15,6 +15,9 @@
     _bgState: true,
     _mouseState: false,
     _lastColourPoint: "#000000",
+    _ensureBetween: function(num, min, max) {
+      return Math.max(min, Math.min(num, max));
+    },
     _mousePosition: function(node, e) {
       var x, y;
       x = parseInt(e.pageX - $(node).offset().left, 10);
@@ -23,16 +26,14 @@
       y = Math.max(0, Math.min(y, node.height));
       return [x, y];
     },
-    _getImageData: function(ctx, node, e) {
-      var b, g, r, x, y, _ref, _ref1;
-      _ref = this._mousePosition(node, e), x = _ref[0], y = _ref[1];
-      x = Math.max(0, Math.min(x, node.width - 1));
-      y = Math.max(0, Math.min(y, node.height - 1));
-      _ref1 = ctx.getImageData(x, y, 1, 1).data, r = _ref1[0], g = _ref1[1], b = _ref1[2];
+    _getImageData: function(ctx, node) {
+      var b, g, r, x, y, _ref;
+      x = Math.max(0, Math.min(this.coords.x, node.width - 1));
+      y = Math.max(0, Math.min(this.coords.y, node.height - 1));
+      _ref = ctx.getImageData(x, y, 1, 1).data, r = _ref[0], g = _ref[1], b = _ref[2];
       return "rgb(" + r + "," + g + "," + b + ")";
     },
-    template: _.template("<canvas class='bg' height=\"{{height}}\" width=\"{{width}}\"></canvas>\n<canvas class='ch' height=\"{{height}}\" width=\"{{width}}\"></canvas>\n<canvas class='fg' height=\"{{height}}\" width=\"{{width}}\"></canvas>"),
-    generateCross: function() {
+    _generateCross: function() {
       var ctx, end, height, i, j, node, origin, start, width;
       node = this.$('.ch')[0];
       ctx = node.getContext('2d');
@@ -45,7 +46,6 @@
       if (this._bgState) {
         ctx.strokeStyle = this._lastColourPoint;
       }
-      console.log(this._lastColourPoint);
       ctx.beginPath();
       ctx.moveTo(width / 2, 0);
       ctx.lineTo(width / 2, height);
@@ -76,7 +76,7 @@
       ctx.stroke();
       ctx.restore();
     },
-    generateBackground: function() {
+    _generateBackground: function() {
       var bg, ctx, height, horizontalGradient, origin, verticalGradient, width;
       bg = this.$('.bg')[0];
       ctx = bg.getContext('2d');
@@ -96,31 +96,34 @@
       ctx.fillRect(0, 0, width, height);
       ctx.restore();
     },
-    setCrosshair: function(e) {
-      var bg, bgCtx, ctx, fg, x, y, _ref;
-      e.preventDefault();
+    _setCrosshair: function() {
+      var bg, bgCtx, ctx, fg, x, y;
       fg = this.$(".fg")[0];
       bg = this.$(".bg")[0];
       ctx = fg.getContext('2d');
       bgCtx = bg.getContext('2d');
-      _ref = this._mousePosition(fg, e), x = _ref[0], y = _ref[1];
-      this._lastColourPoint = this._getImageData(bgCtx, fg, e);
-      console.log(this._lastColourPoint);
-      this.generateCross();
+      this._lastColourPoint = this._getImageData(bgCtx, fg);
+      this._generateCross();
       ctx.clearRect(0, 0, fg.width, fg.height);
       ctx.beginPath();
+      x = this.coords.x;
+      y = this.coords.y;
       ctx.moveTo(x - this.dotSize, y);
       ctx.lineTo(x + this.dotSize, y);
       ctx.moveTo(x, y - this.dotSize);
       ctx.lineTo(x, y + this.dotSize);
       ctx.stroke();
       this._heatmap.store.addDataPoint(x, y);
+      this._setCoordText();
+      return this.coords;
+    },
+    _setCoords: function(x, y) {
       return this.coords = {
         x: x,
         y: y
       };
     },
-    setCoordText: function() {
+    _setCoordText: function() {
       var availableWidth, howMuchIAgree, howMuchICare, node, textCtx, textSize;
       if (this.coords == null) {
         return;
@@ -136,34 +139,7 @@
       textCtx.textBaseline = "top";
       return textCtx.fillText("(" + howMuchICare + ", " + howMuchIAgree + ")", 3, 3);
     },
-    showBackground: function() {
-      this._bgState = true;
-      this.generateCross();
-      this.$(".bg").show();
-      return this.setCoordText();
-    },
-    hideBackground: function() {
-      this._bgState = false;
-      this.generateCross();
-      this.$(".bg").hide();
-      return this.setCoordText();
-    },
-    showHeatmap: function() {
-      return $(this._heatmap.get('canvas')).show();
-    },
-    hideHeatmap: function() {
-      return $(this._heatmap.get('canvas')).hide();
-    },
-    events: {
-      "mousedown": function(e) {
-        this._mouseState = true;
-        $('body').append($('<div class="canvas-filter"></div>'));
-        this.$(".fg").addClass('moving');
-        this.setCrosshair(e);
-        return this.setCoordText();
-      }
-    },
-    setGlobalEvents: function() {
+    _setGlobalEvents: function() {
       var self;
       self = this;
       $(window).on("mouseup", function(e) {
@@ -177,14 +153,30 @@
       });
       $(window).on("mousemove", function(e) {
         return (function(e) {
+          var x, y, _ref;
           if (!this._mouseState) {
             return;
           }
-          this.setCrosshair(e);
-          return this.setCoordText();
+          e.preventDefault();
+          _ref = this._mousePosition(this.$(".fg")[0], e), x = _ref[0], y = _ref[1];
+          this._setCoords(x, y);
+          return this._setCrosshair();
         }).call(self, e);
       });
     },
+    events: {
+      "mousedown": function(e) {
+        var x, y, _ref;
+        this._mouseState = true;
+        $('body').append($('<div class="canvas-filter"></div>'));
+        this.$(".fg").addClass('moving');
+        e.preventDefault();
+        _ref = this._mousePosition(this.$(".fg")[0], e), x = _ref[0], y = _ref[1];
+        this._setCoords(x, y);
+        return this._setCrosshair();
+      }
+    },
+    template: _.template("<canvas class='bg' height=\"{{height}}\" width=\"{{width}}\"></canvas>\n<canvas class='ch' height=\"{{height}}\" width=\"{{width}}\"></canvas>\n<canvas class='fg' height=\"{{height}}\" width=\"{{width}}\"></canvas>"),
     initialize: function(obj) {
       if (obj == null) {
         obj = {};
@@ -202,6 +194,33 @@
         this.notchSpacing = parseInt(obj.notchSpacing, 10);
       }
     },
+    showBackground: function() {
+      this._bgState = true;
+      this.$(".bg").show();
+      return this._generateCross();
+    },
+    hideBackground: function() {
+      this._bgState = false;
+      this.$(".bg").hide();
+      return this._generateCross();
+    },
+    showHeatmap: function() {
+      return $(this._heatmap.get('canvas')).show();
+    },
+    hideHeatmap: function() {
+      return $(this._heatmap.get('canvas')).hide();
+    },
+    set: function(agree, care) {
+      var node, x_diff, y_diff;
+      node = this.$(".ch")[0];
+      x_diff = node.width / 100;
+      y_diff = node.height / 100;
+      this.coords = {
+        x: node.width / 2 - x_diff * this._ensureBetween(agree, -50, 50),
+        y: node.height - y_diff * this._ensureBetween(care, 0, 100)
+      };
+      return this._setCrosshair();
+    },
     render: function() {
       this.$el.empty().append(this.template({
         height: this.height,
@@ -214,9 +233,9 @@
         height: this.height,
         width: this.width
       });
-      this.generateBackground();
-      this.generateCross();
-      this.setGlobalEvents();
+      this._generateBackground();
+      this._generateCross();
+      this._setGlobalEvents();
       this._heatmap = h337.create({
         element: this.el,
         radius: 8,
