@@ -47,7 +47,6 @@ _.templateSettings =
 		ctx.clearRect(0, 0, node.width, node.height)
 		ctx.lineWidth = 2
 		ctx.strokeStyle = @_lastColourPoint if @_bgState
-		console.log(@_lastColourPoint)
 		ctx.beginPath()
 		
 		# vertical line
@@ -120,7 +119,6 @@ _.templateSettings =
 
 		[x, y] = @_mousePosition(fg, e)
 		@_lastColourPoint = @_getImageData(bgCtx, fg, e)
-		console.log(@_lastColourPoint)
 		@generateCross()
 		ctx.clearRect(0, 0, fg.width, fg.height)
 		ctx.beginPath()
@@ -167,7 +165,7 @@ _.templateSettings =
 		$(@_heatmap.get('canvas')).hide()
 
 	events:
-		"mousedown": (e) ->
+		"mousedown touchstart": (e) ->
 			@_mouseState = true
 			$('body').append($('<div class="canvas-filter"></div>'))
 			@$(".fg").addClass('moving')
@@ -177,14 +175,14 @@ _.templateSettings =
 	setGlobalEvents: ->
 		self = this
 
-		$(window).on "mouseup", (e) ->
+		$(window).on "mouseup touchend", (e) ->
 			((e) ->
 				return unless @_mouseState
 				@_mouseState = false
 				$(".canvas-filter").remove()
 			).call(self, e)
 
-		$(window).on "mousemove", (e) ->
+		$(window).on "mousemove touchmove", (e) ->
 			((e) ->
 				return unless @_mouseState
 				@setCrosshair(e)
