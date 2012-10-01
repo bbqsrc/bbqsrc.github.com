@@ -5,14 +5,14 @@
 		<title>2D Selector Canvas Demo</title>
 		<style>
 
-.crosshair-selector > canvas {
+.crosshair-selector > * {
 	position: absolute;
 	top: 0;
 	left: 0;
 }
 
 .crosshair-selector > .bg {
-	opacity: 0.15;
+	/*opacity: 0.15;*/
 }
 
 .crosshair-selector {
@@ -21,24 +21,55 @@
 }
 
 .fg {
-	z-index: 2;
 	position: relative;
 	cursor: crosshair;
+	cursor: grab;
+	cursor: -moz-grab;
+	cursor: -webkit-grab;
 }
 
-.fg:active, .fg:focus {
+/*
+.moving, .fg:active, .fg:focus {
 	cursor: move;
+	cursor: -moz-grabbing;
 }
+*/
 
 .canvas-filter {
-	z-index: 1;
+	z-index: 4;
 	height: 100%;
 	width: 100%;
 	position: absolute;
 	top: 0;
 	left: 0;
 	cursor: move;
+	cursor: grabbing;
+	cursor: -moz-grabbing;
+	cursor: -webkit-grabbing;
 }
+
+
+.green-to-red {
+	/*background: rgb(0,255,0);*/
+	background: -moz-linear-gradient(left,  rgba(0,255,0,1) 0%, rgba(255,0,0,1) 100%);
+	background: -webkit-gradient(linear, left top, right top, color-stop(0%,rgba(0,255,0,1)), color-stop(100%,rgba(255,0,0,1)));
+	background: -webkit-linear-gradient(left,  rgba(0,255,0,1) 0%,rgba(255,0,0,1) 100%);
+	background: -o-linear-gradient(left,  rgba(0,255,0,1) 0%,rgba(255,0,0,1) 100%);
+	background: -ms-linear-gradient(left,  rgba(0,255,0,1) 0%,rgba(255,0,0,1) 100%);
+	background: linear-gradient(to right,  rgba(0,255,0,1) 0%,rgba(255,0,0,1) 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#00ff00', endColorstr='#ff0000',GradientType=1 );
+}
+
+.trans-to-white {
+	background: -moz-linear-gradient(top,  rgba(255,255,255,0) 0%, rgba(255,255,255,1) 100%);
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(255,255,255,0)), color-stop(100%,rgba(255,255,255,1)));
+	background: -webkit-linear-gradient(top,  rgba(255,255,255,0) 0%,rgba(255,255,255,1) 100%);
+	background: -o-linear-gradient(top,  rgba(255,255,255,0) 0%,rgba(255,255,255,1) 100%);
+	background: -ms-linear-gradient(top,  rgba(255,255,255,0) 0%,rgba(255,255,255,1) 100%);
+	background: linear-gradient(to bottom,  rgba(255,255,255,0) 0%,rgba(255,255,255,1) 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#00ffffff', endColorstr='#ffffff',GradientType=0 );
+}
+
 		</style>
 		<script src="../jquery-1.7.2.min.js"></script>
 		<script src="../underscore.js"></script>
@@ -47,18 +78,22 @@
 		<script src="2d-selector.js"></script>
 		<script>
 $(function() {		
-	window.x = new CrosshairSelector({height: 100, width: 100});
+	window.x = new CrosshairSelector({height: 200, width: 200});
 	$('body').append(x.render().el);
 
-	window.checkbox = $("<label><input type='checkbox'> Show heatmap</label>")
-	$('input', checkbox).change(function() {
-		if (this.checked) {
-			x.showHeatmap();
-		} else {
-			x.hideHeatmap();
-		}
+	window.hmCheckbox = $("<label><input type='checkbox'> Show heatmap</label>");
+	$('input', hmCheckbox).change(function() {
+		this.checked ? x.showHeatmap() : x.hideHeatmap();
 	});
-	$('body').append("<br>").append(checkbox);
+	
+	window.bgCheckbox = $("<label><input checked type='checkbox'> Show background</label>");
+	$('input', bgCheckbox).change(function() {
+		this.checked ? x.showBackground() : x.hideBackground();
+	});
+	$('input', bgCheckbox).change();
+	$('input', hmCheckbox).change();
+
+	$('body').append("<br>").append(bgCheckbox).append("<br>").append(hmCheckbox);
 });
 	</script>
 	</head>

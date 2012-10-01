@@ -21,6 +21,8 @@ _.templateSettings =
 		return [x, y]
 
 	template: _.template("""
+		<div class="green-to-red" style="height: {{height}}px; width: {{width}}px"></div>
+		<div class="trans-to-white" style="height: {{height}}px; width: {{width}}px"></div>
 		<canvas class='bg' height="{{height}}" width="{{width}}"></canvas>
 		<canvas class='fg' height="{{height}}" width="{{width}}"></canvas>
 	""")
@@ -97,6 +99,12 @@ _.templateSettings =
 		textCtx.textBaseline = "top"
 		textCtx.fillText("(#{@coords.x}, #{@coords.y})", 3, 3)
 	
+	showBackground: ->
+		@$("div").show()
+
+	hideBackground: ->
+		@$("div").hide()
+	
 	showHeatmap: ->
 		$(@_heatmap.get('canvas')).show()
 	
@@ -107,6 +115,7 @@ _.templateSettings =
 		"mousedown": (e) ->
 			@_mouseState = true
 			$('body').append($('<div class="canvas-filter"></div>'))
+			@$(".fg").addClass('moving')
 			@setCrosshair(e)
 			@setCoordText()
 	
@@ -118,16 +127,16 @@ _.templateSettings =
 				return unless @_mouseState
 				@_mouseState = false
 				$(".canvas-filter").remove()
-				$("body").css('cursor', '')
 			).call(self, e)
 
 		$(window).on "mousemove", (e) ->
 			((e) ->
 				return unless @_mouseState
-				$('body').css('cursor', 'move')
 				@setCrosshair(e)
 				@setCoordText()
 			).call(self, e)
+
+		return
 
 	initialize: (obj={}) ->
 		@height = parseInt(obj.height, 10) if obj.height?

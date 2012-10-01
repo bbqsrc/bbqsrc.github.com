@@ -21,7 +21,7 @@
       y = Math.max(0, Math.min(y, node.height));
       return [x, y];
     },
-    template: _.template("<canvas class='bg' height=\"{{height}}\" width=\"{{width}}\"></canvas>\n<canvas class='fg' height=\"{{height}}\" width=\"{{width}}\"></canvas>"),
+    template: _.template("<div class=\"green-to-red\" style=\"height: {{height}}px; width: {{width}}px\"></div>\n<div class=\"trans-to-white\" style=\"height: {{height}}px; width: {{width}}px\"></div>\n<canvas class='bg' height=\"{{height}}\" width=\"{{width}}\"></canvas>\n<canvas class='fg' height=\"{{height}}\" width=\"{{width}}\"></canvas>"),
     generateBackground: function() {
       var ctx, end, height, i, j, node, origin, start, width;
       node = this.$('.bg')[0];
@@ -88,6 +88,12 @@
       textCtx.textBaseline = "top";
       return textCtx.fillText("(" + this.coords.x + ", " + this.coords.y + ")", 3, 3);
     },
+    showBackground: function() {
+      return this.$("div").show();
+    },
+    hideBackground: function() {
+      return this.$("div").hide();
+    },
     showHeatmap: function() {
       return $(this._heatmap.get('canvas')).show();
     },
@@ -98,6 +104,7 @@
       "mousedown": function(e) {
         this._mouseState = true;
         $('body').append($('<div class="canvas-filter"></div>'));
+        this.$(".fg").addClass('moving');
         this.setCrosshair(e);
         return this.setCoordText();
       }
@@ -111,16 +118,14 @@
             return;
           }
           this._mouseState = false;
-          $(".canvas-filter").remove();
-          return $("body").css('cursor', '');
+          return $(".canvas-filter").remove();
         }).call(self, e);
       });
-      return $(window).on("mousemove", function(e) {
+      $(window).on("mousemove", function(e) {
         return (function(e) {
           if (!this._mouseState) {
             return;
           }
-          $('body').css('cursor', 'move');
           this.setCrosshair(e);
           return this.setCoordText();
         }).call(self, e);
