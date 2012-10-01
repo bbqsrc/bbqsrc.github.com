@@ -43,7 +43,33 @@
         issue = _ref1[_j];
         row = $("<tr><th>" + issue + "</th></tr>");
         for (i = _k = 1, _ref2 = this.solutions.length; 1 <= _ref2 ? _k <= _ref2 : _k >= _ref2; i = 1 <= _ref2 ? ++_k : --_k) {
-          cell = $("<td><label><input type='checkbox'></label></td>");
+          cell = $("<td>\n	<button class='down'>-</button>\n	<input type='number' step='1' min='1' max='10'>\n	<button class='up'>+</button>\n</td>");
+          $(".up", cell).click(function(e) {
+            var node;
+            try {
+              node = $(this).siblings('input')[0];
+              if (node.value === "") {
+                return node.value = $(node).attr('min');
+              } else {
+                return node.stepUp();
+              }
+            } catch (e) {
+
+            }
+          });
+          $(".down", cell).click(function(e) {
+            var node;
+            try {
+              node = $(this).siblings('input')[0];
+              if (node.value === "") {
+                return node.value = $(node).attr('max');
+              } else {
+                return node.stepDown();
+              }
+            } catch (e) {
+
+            }
+          });
           row.append(cell);
         }
         tbody.append(row);
