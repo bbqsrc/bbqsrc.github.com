@@ -27,11 +27,11 @@ _.templateSettings =
 		return [x, y]
 
 	_getImageData: (ctx, node) ->
-		x = Math.max(0, Math.min(@coords.x, node.width-1))
-		y = Math.max(0, Math.min(@coords.y, node.height-1))
-		[r, g, b] = ctx.getImageData(x, y, 1, 1).data
+		x = Math.max(0, Math.min(@_coords.x, node.width-1))
+		y = Math.max(0, Math.min(@_coords.y, node.height-1))
+		[r, g, b, a] = ctx.getImageData(x, y, 1, 1).data
 		
-		return "rgb(#{r},#{g},#{b})"
+		return "rgba(#{r},#{g},#{b},#{a})"
 
 	_generateCross: ->
 		node = @$('.ch')[0]
@@ -91,12 +91,13 @@ _.templateSettings =
 		# green to red horizontal gradient
 		horizontalGradient = ctx.createLinearGradient(0, 0, width, 0)
 		horizontalGradient.addColorStop(0, "#00ff00")
+		#horizontalGradient.addColorStop(0.5, "#ffff00")
 		horizontalGradient.addColorStop(1, "#ff0000")
 		
 		# transparent to white vertical gradient
 		verticalGradient = ctx.createLinearGradient(0, 0, 0, height)
-		verticalGradient.addColorStop(0, "rgba(0,0,0,0)")
-		verticalGradient.addColorStop(1, "rgba(255,255,255,1)")
+		verticalGradient.addColorStop(0, "rgba(220,220,220,0)")
+		verticalGradient.addColorStop(1, "rgba(220,220,220,0.9)")
 		
 		ctx.save()
 		ctx.fillStyle = horizontalGradient
@@ -116,8 +117,8 @@ _.templateSettings =
 		@_generateCross()
 		ctx.clearRect(0, 0, fg.width, fg.height)
 		ctx.beginPath()
-		x = @coords.x
-		y = @coords.y
+		x = @_coords.x
+		y = @_coords.y
 		ctx.moveTo(x-@dotSize, y)
 		ctx.lineTo(x+@dotSize, y)
 		ctx.moveTo(x, y-@dotSize)
@@ -126,25 +127,25 @@ _.templateSettings =
 		
 		@_heatmap.store.addDataPoint(x, y)
 		@_setCoordText()
-		return @coords
+		return @_coords
 
 	_setCoords: (x, y) ->
-		return @coords = {x: x, y: y}
+		return @_coords = {x: x, y: y}
 
 	_setCoordText: ->
-		return unless @coords?
+		return unless @_coords?
 		node = @$(".ch")[0]
 		textCtx = node.getContext('2d')
 		textSize = node.height / 20
 		availableWidth = node.width/2 - @notchWidth/2
 		
-		howMuchICare = node.width/2 - @coords.x
-		howMuchIAgree = node.height - @coords.y
+		howMuchIAgree = node.width/2 - @_coords.x
+		howMuchICare = node.height - @_coords.y
 
 		textCtx.clearRect(0, 0, availableWidth, textSize*2)
 		textCtx.font = "#{textSize}px monospace"
 		textCtx.textBaseline = "top"
-		textCtx.fillText("(#{howMuchICare}, #{howMuchIAgree})", 3, 3)
+		textCtx.fillText("(#{howMuchIAgree}, #{howMuchICare})", 3, 3)
 	
 	_setGlobalEvents: ->
 		self = this
@@ -163,6 +164,7 @@ _.templateSettings =
 				[x, y] = @_mousePosition(@$(".fg")[0], e)
 				@_setCoords(x, y)
 				@_setCrosshair()
+				@onSet.call(this, e)
 			).call(self, e)
 
 		return
@@ -188,6 +190,7 @@ _.templateSettings =
 		@width = parseInt(obj.width, 10) if obj.width?
 		@dotSize = parseInt(obj.dotSize, 10) if obj.dotSize?
 		@notchSpacing = parseInt(obj.notchSpacing, 10) if obj.notchSpacing?
+		@onSet = obj.onSet if obj.onSet?
 		return
 
 	showBackground: ->
@@ -200,22 +203,40 @@ _.templateSettings =
 		@$(".bg").hide()
 		@_generateCross()
 	
+	setHeatmapData: (data) ->
+		@_heatmap.store.setDataSet(data)
+
 	showHeatmap: ->
 		$(@_heatmap.get('canvas')).show()
 	
 	hideHeatmap: ->
 		$(@_heatmap.get('canvas')).hide()
+	
+	onSet: (event) -> return
 
 	set: (agree, care) ->
 		node = @$(".ch")[0]
 		x_diff = node.width / 100
 		y_diff = node.height / 100
-		@coords =
+		@_coords =
 			x: node.width/2 - x_diff * @_ensureBetween(agree, -50, 50)
 			y: node.height - y_diff * @_ensureBetween(care, 0, 100)
 
 		@_setCrosshair()
+		@onSet.call(this)
+		return
 	
+	get: () ->
+		return null unless @_coords?
+		node = @$(".ch")[0]
+		
+		modW = node.width / 100
+		modH = node.height / 100
+
+		care = (node.height - @_coords.y) / modH
+		agree = (node.width/2 - @_coords.x) / modW
+		return [agree, care]
+
 	render: ->
 		@$el.empty().append(
 			@template(height: @height, width: @width)

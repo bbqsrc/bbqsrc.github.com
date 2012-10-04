@@ -27,11 +27,11 @@
       return [x, y];
     },
     _getImageData: function(ctx, node) {
-      var b, g, r, x, y, _ref;
-      x = Math.max(0, Math.min(this.coords.x, node.width - 1));
-      y = Math.max(0, Math.min(this.coords.y, node.height - 1));
-      _ref = ctx.getImageData(x, y, 1, 1).data, r = _ref[0], g = _ref[1], b = _ref[2];
-      return "rgb(" + r + "," + g + "," + b + ")";
+      var a, b, g, r, x, y, _ref;
+      x = Math.max(0, Math.min(this._coords.x, node.width - 1));
+      y = Math.max(0, Math.min(this._coords.y, node.height - 1));
+      _ref = ctx.getImageData(x, y, 1, 1).data, r = _ref[0], g = _ref[1], b = _ref[2], a = _ref[3];
+      return "rgba(" + r + "," + g + "," + b + "," + a + ")";
     },
     _generateCross: function() {
       var ctx, end, height, i, j, node, origin, start, width;
@@ -87,8 +87,8 @@
       horizontalGradient.addColorStop(0, "#00ff00");
       horizontalGradient.addColorStop(1, "#ff0000");
       verticalGradient = ctx.createLinearGradient(0, 0, 0, height);
-      verticalGradient.addColorStop(0, "rgba(0,0,0,0)");
-      verticalGradient.addColorStop(1, "rgba(255,255,255,1)");
+      verticalGradient.addColorStop(0, "rgba(220,220,220,0)");
+      verticalGradient.addColorStop(1, "rgba(220,220,220,0.9)");
       ctx.save();
       ctx.fillStyle = horizontalGradient;
       ctx.fillRect(0, 0, width, height);
@@ -106,8 +106,8 @@
       this._generateCross();
       ctx.clearRect(0, 0, fg.width, fg.height);
       ctx.beginPath();
-      x = this.coords.x;
-      y = this.coords.y;
+      x = this._coords.x;
+      y = this._coords.y;
       ctx.moveTo(x - this.dotSize, y);
       ctx.lineTo(x + this.dotSize, y);
       ctx.moveTo(x, y - this.dotSize);
@@ -115,29 +115,29 @@
       ctx.stroke();
       this._heatmap.store.addDataPoint(x, y);
       this._setCoordText();
-      return this.coords;
+      return this._coords;
     },
     _setCoords: function(x, y) {
-      return this.coords = {
+      return this._coords = {
         x: x,
         y: y
       };
     },
     _setCoordText: function() {
       var availableWidth, howMuchIAgree, howMuchICare, node, textCtx, textSize;
-      if (this.coords == null) {
+      if (this._coords == null) {
         return;
       }
       node = this.$(".ch")[0];
       textCtx = node.getContext('2d');
       textSize = node.height / 20;
       availableWidth = node.width / 2 - this.notchWidth / 2;
-      howMuchICare = node.width / 2 - this.coords.x;
-      howMuchIAgree = node.height - this.coords.y;
+      howMuchIAgree = node.width / 2 - this._coords.x;
+      howMuchICare = node.height - this._coords.y;
       textCtx.clearRect(0, 0, availableWidth, textSize * 2);
       textCtx.font = "" + textSize + "px monospace";
       textCtx.textBaseline = "top";
-      return textCtx.fillText("(" + howMuchICare + ", " + howMuchIAgree + ")", 3, 3);
+      return textCtx.fillText("(" + howMuchIAgree + ", " + howMuchICare + ")", 3, 3);
     },
     _setGlobalEvents: function() {
       var self;
@@ -160,7 +160,8 @@
           e.preventDefault();
           _ref = this._mousePosition(this.$(".fg")[0], e), x = _ref[0], y = _ref[1];
           this._setCoords(x, y);
-          return this._setCrosshair();
+          this._setCrosshair();
+          return this.onSet.call(this, e);
         }).call(self, e);
       });
     },
@@ -193,6 +194,9 @@
       if (obj.notchSpacing != null) {
         this.notchSpacing = parseInt(obj.notchSpacing, 10);
       }
+      if (obj.onSet != null) {
+        this.onSet = obj.onSet;
+      }
     },
     showBackground: function() {
       this._bgState = true;
@@ -204,22 +208,39 @@
       this.$(".bg").hide();
       return this._generateCross();
     },
+    setHeatmapData: function(data) {
+      return this._heatmap.store.setDataSet(data);
+    },
     showHeatmap: function() {
       return $(this._heatmap.get('canvas')).show();
     },
     hideHeatmap: function() {
       return $(this._heatmap.get('canvas')).hide();
     },
+    onSet: function(event) {},
     set: function(agree, care) {
       var node, x_diff, y_diff;
       node = this.$(".ch")[0];
       x_diff = node.width / 100;
       y_diff = node.height / 100;
-      this.coords = {
+      this._coords = {
         x: node.width / 2 - x_diff * this._ensureBetween(agree, -50, 50),
         y: node.height - y_diff * this._ensureBetween(care, 0, 100)
       };
-      return this._setCrosshair();
+      this._setCrosshair();
+      this.onSet.call(this);
+    },
+    get: function() {
+      var agree, care, modH, modW, node;
+      if (this._coords == null) {
+        return null;
+      }
+      node = this.$(".ch")[0];
+      modW = node.width / 100;
+      modH = node.height / 100;
+      care = (node.height - this._coords.y) / modH;
+      agree = (node.width / 2 - this._coords.x) / modW;
+      return [agree, care];
     },
     render: function() {
       this.$el.empty().append(this.template({
