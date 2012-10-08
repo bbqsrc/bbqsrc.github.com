@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html data-ng-app>
+	<head>
+		<title>Angular Table Example</title>
+		<meta charset="utf-8">
+		<style>
+			table {
+				border: 1px solid red;
+			}
+
+			td { 
+				border: 1px solid gray; 
+			} 
+		</style>
+	  <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.0.2/angular.min.js"></script>
+	  <script>
+		function TableController($scope) {
+			var cellCount = 0;
+		
+			function updateCells() {
+				for (var i = 0, ii = $scope.table.length; i < ii; ++i) {
+					while ($scope.table[i].length < cellCount) {
+						$scope.table[i].push({});
+					}
+				}
+			}
+		
+			$scope.table = [];
+		
+			$scope.addCell = function() {
+				cellCount++;
+				updateCells();
+			}	
+		
+			$scope.addRow = function() {
+				$scope.table.push([]);
+				updateCells();
+			}
+		}
+	  </script>
+  </head>
+  <body>
+	<h2>Table Example</h2>
+	<div id="table" data-ng-controller="TableController">
+	  <table>
+		<tr data-ng-repeat="row in table">
+		  <td data-ng-repeat="cell in row">
+            <input type="number" min="1" max="10" step="1" data-ng-model="cell.value">
+		  </td>
+		</tr>
+	  </table>
+      <button data-ng-click="addRow()">Add Row</button><br>
+      <button data-ng-click="addCell()">Add Cell</button>
+    </div>
+  </body>
+</html>
+
