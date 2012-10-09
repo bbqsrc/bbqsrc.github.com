@@ -12,7 +12,7 @@ function TreeController($scope) {
         this.reputation = obj.reputation || parseInt(Math.random() * 100, 10);
         this.date = obj.date || new Date;
         
-        this.nodes = [];
+        this.nodes = obj.nodes || [];
         this.retrievedChildren = false;
         this.visible = true;
     }
@@ -47,7 +47,20 @@ function TreeController($scope) {
         if (prop == "reputation") comment.nodes.reverse();
     };
 
-    $scope.tree = [new Comment({content: "derp"})];
+	$scope.tree = [new Comment({content: "derp"})];
+
+	$scope.example = function() {
+		$scope.tree = [new Comment({
+			content: "1",
+			nodes: [new Comment({
+				content: "1-1"
+			}), new Comment({
+				content: "1-2"
+			})]
+		}), new Comment({
+			content: "2"
+		})]
+	};
 }
         </script>
         <script type="text/ng-template" id="tree-item">
@@ -67,7 +80,8 @@ function TreeController($scope) {
     </head>
     <body>
         <h2>Tree Example</h2>
-        <ul id="root" data-ng-controller="TreeController">
+		<ul id="root" data-ng-controller="TreeController">
+			<button ng-click="example()">Example</button>
             <li data-ng-repeat="comment in tree" data-ng-include="'tree-item'"></li>
         </ul>
     </body>
