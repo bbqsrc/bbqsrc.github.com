@@ -1,84 +1,75 @@
 <!DOCTYPE html>
 <html data-ng-app>
-	<head>
-		<title>Angular Table Example</title>
-		<meta charset="utf-8">
-		<style>
-			table {
-				border: 1px solid red;
-			}
+    <head>
+        <title>Angular Tree Example</title>
+        <meta charset="utf-8">
+        <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.0.2/angular.min.js"></script>
+        <script>
+function TreeController($scope) {
+    function Comment(obj) {
+        typeof obj == "object" && obj || (obj = {});
+        this.content = obj.content || "";
+        this.reputation = obj.reputation || parseInt(Math.random() * 100, 10);
+        this.date = obj.date || new Date;
+        
+        this.nodes = [];
+        this.retrievedChildren = false;
+        this.visible = true;
+    }
 
-			td { 
-				border: 1px solid gray; 
-			} 
-		</style>
-	  <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.0.2/angular.min.js"></script>
-	  <script>
-		function TreeController($scope) {
-			function Comment(obj) {
-				typeof obj == "object" && obj || (obj = {});
-				this.content = obj.content || "";
-				this.reputation = obj.reputation || parseInt(Math.random() * 100, 10);
-				this.date = obj.date || new Date;
-				
-				this.nodes = [];
-				this.retrievedChildren = false;
-				this.visible = true;
-			}
+    Comment.prototype.retrieveChildren = function() {
+        this.retrievedChildren = true;
+    };
 
-			Comment.prototype.retrieveChildren = function() {
-				this.retrievedChildren = true;
-			};
+    $scope.delete = function(comment) {
+        comment.nodes = [];
+    };
 
-		    $scope.delete = function(comment) {
-		        comment.nodes = [];
-			};
+    $scope.toggleChildren = function(comment) {
+        comment.visible = !comment.visible;    
+    };
 
-			$scope.toggleChildren = function(comment) {
-				comment.visible = !comment.visible;	
-			};
+    $scope.add = function(comment) {
+        var x = comment.nodes.length + 1;
+        var newName = comment.content + ' - ' + x;
+        comment.nodes.push(new Comment({content: newName}));
+    };
+    
+    $scope.sort = function(comment, prop) {
+        comment.nodes.sort(function(a, b) {
+            if (a[prop] < b[prop]) {
+                return -1;
+            } else if (a[prop] > b[prop]) {
+                return 1;
+            }
+            return 0;
+        });
+        if (prop == "reputation") comment.nodes.reverse();
+    };
 
-		    $scope.add = function(comment) {
-		        var x = comment.nodes.length + 1;
-		        var newName = comment.content + ' - ' + x;
-		        comment.nodes.push(new Comment({content: newName}));
-			};
-			
-			$scope.sort = function(comment, prop) {
-				comment.nodes.sort(function(a, b) {
-					if (a[prop] < b[prop]) {
-						return -1;
-					} else if (a[prop] > b[prop]) {
-						return 1;
-					}
-					return 0;
-				});
-				if (prop == "reputation") comment.nodes.reverse();
-			};
-
-		    $scope.tree = [new Comment({content: "derp"})];
-		}
-	</script>
-	<script type="text/ng-template" id="tree-item">
-		<div class='content'>{{comment.content}}</div>
-		<span class='date'>{{comment.date}}</span>
-		<span class='rep'>{{comment.reputation}}</span>
-		<button ng-click="add(comment)">Add node</button>
-		<button ng-click="delete(comment)" ng-show="comment.nodes.length > 0">Delete nodes</button>
-		<button ng-click="sort(comment, 'date')" ng-show="comment.nodes.length > 1">Sort by time</button>
-		<button ng-click="sort(comment, 'reputation')" ng-show="comment.nodes.length > 1">Sort by rep</button>
-		<button ng-click="toggleChildren(comment)" ng-show="comment.nodes.length > 0 && !comment.visible">Show children</button>
-		<button ng-click="toggleChildren(comment)" ng-show="comment.nodes.length > 0 && comment.visible">Hide children</button>
-	<ul ng-show="comment.visible == true">
-		<li ng-repeat="comment in comment.nodes" ng-include="'tree-item'"></li>
-	</ul>
-</script>
-  </head>
-  <body>
-	<h2>Table Example</h2>
-	<ul id="root" data-ng-controller="TreeController">
-		<li data-ng-repeat="comment in tree" data-ng-include="'tree-item'"></li>
-    </ul>
-  </body>
+    $scope.tree = [new Comment({content: "derp"})];
+}
+        </script>
+        <script type="text/ng-template" id="tree-item">
+            <div class='content'>{{comment.content}}</div>
+            <span class='date'>{{comment.date}}</span>
+            <span class='rep'>{{comment.reputation}}</span>
+            <button ng-click="add(comment)">Add node</button>
+            <button ng-click="delete(comment)" ng-show="comment.nodes.length > 0">Delete nodes</button>
+            <button ng-click="sort(comment, 'date')" ng-show="comment.nodes.length > 1">Sort by time</button>
+            <button ng-click="sort(comment, 'reputation')" ng-show="comment.nodes.length > 1">Sort by rep</button>
+            <button ng-click="toggleChildren(comment)" ng-show="comment.nodes.length > 0 && !comment.visible">Show children</button>
+            <button ng-click="toggleChildren(comment)" ng-show="comment.nodes.length > 0 && comment.visible">Hide children</button>
+            <ul ng-show="comment.visible == true">
+                <li ng-repeat="comment in comment.nodes" ng-include="'tree-item'"></li>
+            </ul>
+        </script>
+    </head>
+    <body>
+        <h2>Table Example</h2>
+        <ul id="root" data-ng-controller="TreeController">
+            <li data-ng-repeat="comment in tree" data-ng-include="'tree-item'"></li>
+        </ul>
+    </body>
 </html>
 
