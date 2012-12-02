@@ -1,6 +1,15 @@
 _.templateSettings =
   interpolate: /\{\{(.+?)\}\}/g
 
+makeVotingThing: ->
+	return $("""
+	<div>
+	<button class='down'>-</button>
+	<input type='number' step='1' min='1' max='10'>
+	<button class='up'>+</button>
+	</div>
+	""")
+
 @MAUT = Backbone.View.extend
 	className: "maut"
 	tagName: "table"
@@ -29,14 +38,11 @@ _.templateSettings =
 
 		for issue in @issues
 			row = $("<tr><th>#{issue}</th></tr>")
+			row.append(makeVotingThing())
+			
 			for i in [1..@solutions.length]
-				cell = $("""
-				<td>
-					<button class='down'>-</button>
-					<input type='number' step='1' min='1' max='10'>
-					<button class='up'>+</button>
-				</td>
-				""")
+				cell = $(document.createElement("td"))
+				cell.append(makeVotingThing())
 				$(".up", cell).click((e) ->
 					try
 						node = $(this).siblings('input')[0]
