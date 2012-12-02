@@ -1,7 +1,7 @@
 _.templateSettings =
   interpolate: /\{\{(.+?)\}\}/g
 
-makeVotingThing: ->
+makeVotingThing = ->
 	return $("""
 	<div>
 	<button class='down'>-</button>
@@ -38,7 +38,7 @@ makeVotingThing: ->
 
 		for issue in @issues
 			row = $("<tr><th>#{issue}</th></tr>")
-			row.append(makeVotingThing())
+			row.find("th").append(makeVotingThing())
 			
 			for i in [1..@solutions.length]
 				cell = $(document.createElement("td"))
