@@ -5,6 +5,12 @@
     interpolate: /\{\{(.+?)\}\}/g
   };
 
+  ({
+    makeVotingThing: function() {
+      return $("<div>\n<button class='down'>-</button>\n<input type='number' step='1' min='1' max='10'>\n<button class='up'>+</button>\n</div>");
+    }
+  });
+
   this.MAUT = Backbone.View.extend({
     className: "maut",
     tagName: "table",
@@ -42,8 +48,10 @@
       for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
         issue = _ref1[_j];
         row = $("<tr><th>" + issue + "</th></tr>");
+        row.append(makeVotingThing());
         for (i = _k = 1, _ref2 = this.solutions.length; 1 <= _ref2 ? _k <= _ref2 : _k >= _ref2; i = 1 <= _ref2 ? ++_k : --_k) {
-          cell = $("<td>\n	<button class='down'>-</button>\n	<input type='number' step='1' min='1' max='10'>\n	<button class='up'>+</button>\n</td>");
+          cell = $(document.createElement("td"));
+          cell.append(makeVotingThing());
           $(".up", cell).click(function(e) {
             var node;
             try {
