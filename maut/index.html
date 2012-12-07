@@ -24,10 +24,6 @@
       $scope.rows = [];
       $scope.weights = [];
 
-      var maxScore = 50;
-      $scope.remainingScore = 50;
-
-
       $scope.writable = true;
 
       {
@@ -55,16 +51,6 @@
         return (comp + $scope.remainingScore > $scope.remainingScore ? comp : 0) + $scope.remainingScore;
       }
 
-      $scope.calculateRemainingScore = function() {
-        var x = 0;
-        for (var i = 0, ii = $scope.rows.length; i < ii; ++i) {
-          for (var j = 0, jj = $scope.rows[i].cells.length; j < jj; ++j) {
-            x += $scope.rows[i].cells[j].value;
-          }
-        }
-        $scope.remainingScore = maxScore - x;
-      }
-
       $scope.getMaxWeight = function() {
         return $scope.criteria.length * 5;
       };
@@ -90,7 +76,7 @@
     <table>
       <thead>
         <tr>
-          <td colspan='2' style="border-right: 1px dotted black">Score remaining: {{remainingScore}}</td>
+          <td colspan='2'></td>
           <th data-ng-repeat="header in solutions">{{header}}</th>
         </tr>
       </thead>
@@ -103,7 +89,7 @@
             data-ng-change="weightMeBro()"></td>
 		      <td data-ng-repeat="cell in row.cells">
             <input data-ng-readonly="!writable" type="number" min="0"
-            max="{{getMax(cell.value)}}" step="1"
+            max="10" step="1"
             data-ng-change="calculateRemainingScore()" data-ng-model="cell.value">
 		      </td>
         </tr>
