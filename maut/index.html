@@ -1,78 +1,116 @@
 <!DOCTYPE html>
-<html lang="en">
+<html data-ng-app>
 	<head>
+		<title>Angular Table Example</title>
 		<meta charset="utf-8">
-		<title>MAUT Demo</title>
 		<style>
-.maut {
-	border-collapse: collapse;
-	border: 1px solid black;
-}
+			table {
+				border: 1px solid red;
+			}
 
-.maut td, .maut th {
-  text-align: center;
-  padding: 1em;
-}
+			tbody td { 
+      } 
 
-.maut th {
-	border: 1px solid black;
-	padding: 0.3em;
-}
-
-.maut td {
-	border: 1px dotted gray;
-}
-
-.maut td:hover {
-	background-color: #eee;
-}
-
-.maut td label {
-	/*display: block;*/
-}
-
-.maut button {
-	margin: 0;
-	padding: 0;
-	width: 1.5em;
-}
-.maut input[type='number']::-webkit-outer-spin-button,
-.maut input[type='number']::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
+      input[readonly] {
+        border-color: transparent;
+      }
 		</style>
-		<script src="../jquery-1.7.2.min.js"></script>
-		<script src="../underscore.js"></script>
-		<script src="../backbone.js"></script>
-		<script src="maut.js"></script>
-		<script>
-$(function() {		
-	window.x = new MAUT({
-		issues: ["First issue", "Second issue", "Third issue", "Fourth issue"],
-		solutions: ["Kill everyone", "Don't kill everyone", "Eat first"]
-	});
-	$('body').append(x.render().el);
+	  <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.0.3/angular.min.js"></script>
+	  <script>
+		function TableController($scope) {
+      $scope.solutions = ["First", "Second", "Third", "Herp"];
+      $scope.criteria = ["Issue 1", "Issue 2", "Issue 3", "Issue 4", "Issue 5", "Issue 6"];
+      $scope.rows = [];
+      $scope.weights = [];
 
-	window.colinput = $("<input>");
-	window.colbutton = $("<button>Add column</button>");
-	
-	window.rowinput = $("<input>");
-	window.rowbutton = $("<button>Add row</button>");
+      var maxScore = 50;
+      $scope.remainingScore = 50;
 
-	$('body').append('<br>').append(colinput).append(colbutton);
-	colbutton.click(function() {
-		x.addSolution(colinput.val());
-		x.render();
-	});
-	$('body').append('<br>').append(rowinput).append(rowbutton);
-	rowbutton.click(function() {
-		x.addIssue(rowinput.val());
-		x.render();
-	});
-});
-	</script>
-	</head>
-	<body>
-	</body>
+
+      $scope.writable = true;
+
+      {
+        var column, row, i, ii, cells;
+
+        cells = function() {
+          var x = [];
+          for (var i = 0, ii = $scope.solutions.length; i < ii; ++i) {
+            x.push({name: $scope.solutions[i], value: 0});
+          }
+          return x;
+        };
+
+        for (i = 0, ii = $scope.criteria.length; i < ii; ++i) {
+          row = {name: $scope.criteria[i], cells: cells()};
+          $scope.rows.push(row);
+        }
+      }
+
+      $scope.toggleWritable = function() {
+        $scope.writable = !$scope.writable;
+      }
+
+      $scope.getMax = function(comp) {
+        return (comp + $scope.remainingScore > $scope.remainingScore ? comp : 0) + $scope.remainingScore;
+      }
+
+      $scope.calculateRemainingScore = function() {
+        var x = 0;
+        for (var i = 0, ii = $scope.rows.length; i < ii; ++i) {
+          for (var j = 0, jj = $scope.rows[i].cells.length; j < jj; ++j) {
+            x += $scope.rows[i].cells[j].value;
+          }
+        }
+        $scope.remainingScore = maxScore - x;
+      }
+
+      $scope.getMaxWeight = function() {
+        return $scope.criteria.length * 5;
+      };
+
+      $scope.weightMeBro = function() {
+        var split = $scope.criteria.length - 1,
+            diff = (this.row.lastWeight - this.row.weight) * 100 / split / 100
+              % 100;
+
+        this.row.lastWeight = this.row.weight;
+        for (var i = 0, ii = $scope.rows.length; i < ii; ++i) {
+          if ($scope.rows[i] != this.row) {
+            $scope.rows[i].weight += diff;
+          }
+        }
+      }
+		}
+	  </script>
+  </head>
+  <body>
+	<h2>Table Example</h2>
+	<div id="table" data-ng-controller="TableController">
+    <table>
+      <thead>
+        <tr>
+          <td colspan='2' style="border-right: 1px dotted black">Score remaining: {{remainingScore}}</td>
+          <th data-ng-repeat="header in solutions">{{header}}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr data-ng-repeat="row in rows">
+          <th>{{row.name}}</th>
+          <td style="border-right: 1px dotted black">
+            <input data-ng-readonly="!writable" data-ng-init="row.lastWeight = 5; row.weight = 5"
+            type="number" min="0" max="{{getMaxWeight()}}" step="0.1" data-ng-model="row.weight"
+            data-ng-change="weightMeBro()"></td>
+		      <td data-ng-repeat="cell in row.cells">
+            <input data-ng-readonly="!writable" type="number" min="0"
+            max="{{getMax(cell.value)}}" step="1"
+            data-ng-change="calculateRemainingScore()" data-ng-model="cell.value">
+		      </td>
+        </tr>
+      </tbody>
+	  </table>
+      <button data-ng-click="toggleWritable()">Toggle Readonly</button><br>
+    <textarea>{{rows}}</textarea>
+    </div>
+  </body>
 </html>
+
