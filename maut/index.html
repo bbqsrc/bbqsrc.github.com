@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html data-ng-app>
-	<head>
-		<title>Angular Table Example</title>
-		<meta charset="utf-8">
+  <head>
+    <title>Angular Table Example</title>
+    <meta charset="utf-8">
     <style>
       html, body {
         font-family: sans-serif;
       }
 
-			table {
-				border: 1px solid red;
+      table {
+        border: 1px solid red;
       }
 
       tfoot {
@@ -25,10 +25,10 @@
       input[readonly] {
         border-color: transparent;
       }
-		</style>
-	  <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.0.3/angular.min.js"></script>
-	  <script>
-		function TableController($scope) {
+    </style>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.0.3/angular.min.js"></script>
+    <script>
+    function TableController($scope) {
       $scope.solutions = ["First", "Second", "Third", "Herp"];
       $scope.criteria = ["Criteria 1", "Criteria 2", "Criteria 3", "Criteria 4", "Criteria 5", "Criteria 6"];
       $scope.rows = [];
@@ -89,41 +89,43 @@
         }
         return parseInt(out * 100, 10) / 100;
       }
-		}
-	  </script>
+    }
+    </script>
   </head>
   <body>
-	<h2>Table Example</h2>
-	<div id="table" data-ng-controller="TableController">
-    <table>
-      <thead>
-        <tr>
-          <td colspan='2'></td>
-          <th data-ng-repeat="header in solutions">{{header}}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr data-ng-repeat="row in rows">
-          <th>{{row.name}}</th>
-          <td style="border-right: 1px dotted black">
-            <input data-ng-readonly="!writable" data-ng-init="row.lastWeight = 5; row.weight = 5"
-            type="number" min="0" max="{{getMaxWeight()}}" step="0.1" data-ng-model="row.weight"
-            data-ng-change="weightMeBro()"></td>
-		      <td data-ng-repeat="cell in row.cells">
-            <input data-ng-readonly="!writable" type="number" min="0"
-            max="10" step="1"
-            data-ng-change="calculateRemainingScore()" data-ng-model="cell.value">
-		      </td>
-        </tr>
-      </tbody>
-      <tfoot>
-        <tr>
-          <td colspan="2">Total:</td>
-          <td data-ng-repeat="col in solutions">{{gimmeMahTotalBro()}}</td>
-      </tfoot>
-	  </table>
+    <h2>Table Example</h2>
+    <div id="table" data-ng-controller="TableController">
+      <table>
+        <thead>
+          <tr>
+            <td colspan='2'></td>
+            <th data-ng-repeat="header in solutions">{{header}}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr data-ng-repeat="row in rows">
+            <th>{{row.name}}</th>
+            <td style="border-right: 1px dotted black">
+              <input data-ng-readonly="!writable" data-ng-init="row.lastWeight = 5; row.weight = 5"
+              type="number" min="0" max="{{getMaxWeight()}}" step="0.1" data-ng-model="row.weight"
+              data-ng-change="weightMeBro()">
+            </td>
+            <td data-ng-repeat="cell in row.cells">
+              <input data-ng-readonly="!writable" type="number" min="0" max="10" 
+              step="1" data-ng-change="calculateRemainingScore()" 
+              data-ng-model="cell.value">
+            </td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="2">Total:</td>
+            <td data-ng-repeat="col in solutions">{{gimmeMahTotalBro()}}</td>
+          </tr>
+        </tfoot>
+      </table>
       <button data-ng-click="toggleWritable()">Toggle Readonly</button><br>
-    <textarea>{{rows}}</textarea>
+      <textarea>{{rows}}</textarea>
     </div>
   </body>
 </html>
