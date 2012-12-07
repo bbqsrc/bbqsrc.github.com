@@ -3,13 +3,23 @@
 	<head>
 		<title>Angular Table Example</title>
 		<meta charset="utf-8">
-		<style>
+    <style>
+      html, body {
+        font-family: sans-serif;
+      }
+
 			table {
 				border: 1px solid red;
-			}
+      }
+
+      tfoot {
+        text-align: right;
+      }
 
       input[type='number'] {
         text-align: right;
+        box-sizing: border-box;
+        width: 100%;
       }
 
       input[readonly] {
@@ -67,6 +77,18 @@
           }
         }
       }
+
+      $scope.gimmeMahTotalBro = function() {
+        var out = 0;
+        for (var i = 0, ii = $scope.rows.length; i < ii; ++i) {
+          for (var j = 0, jj = $scope.rows[i].cells.length; j < jj; ++j) {
+            if ($scope.rows[i].cells[j].name == this.col) {
+              out += $scope.rows[i].cells[j].value * $scope.rows[i].weight;
+            }
+          }
+        }
+        return parseInt(out * 100, 10) / 100;
+      }
 		}
 	  </script>
   </head>
@@ -94,6 +116,11 @@
 		      </td>
         </tr>
       </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="2">Total:</td>
+          <td data-ng-repeat="col in solutions">{{gimmeMahTotalBro()}}</td>
+      </tfoot>
 	  </table>
       <button data-ng-click="toggleWritable()">Toggle Readonly</button><br>
     <textarea>{{rows}}</textarea>
