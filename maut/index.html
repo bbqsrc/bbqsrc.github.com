@@ -58,14 +58,14 @@
         cells = function() {
           var x = [];
           for (var i = 0, ii = $scope.solutions.length; i < ii; ++i) {
-            x.push({name: $scope.solutions[i], value: 0});
+            x.push({solution: $scope.solutions[i], value: 0});
           }
           return x;
         };
 
         for (i = 0, ii = $scope.criteria.length; i < ii; ++i) {
           $scope.rows.push({
-            name: $scope.criteria[i],
+            criterion: $scope.criteria[i],
             weight: w,
             cells: cells()
           });
@@ -88,7 +88,7 @@
         var out = 0;
         for (var i = 0, ii = $scope.rows.length; i < ii; ++i) {
           for (var j = 0, jj = $scope.rows[i].cells.length; j < jj; ++j) {
-            if ($scope.rows[i].cells[j].name == this.col) {
+            if ($scope.rows[i].cells[j].criterion == this.col) {
               out += $scope.rows[i].cells[j].value * $scope.rows[i].weight;
             }
           }
@@ -162,7 +162,7 @@
               data-ng-model="root.selectedRow" data-ng-change="parseInt(root.selectedRow,10)">
             </td>
             <th>
-              <label for="row-{{rows.indexOf(row)}}">{{row.name}}</label>
+              <label for="row-{{rows.indexOf(row)}}">{{row.criterion}}</label>
             </th>
             <td>
               <input data-ng-disabled="true || readOnlyCheck()"
