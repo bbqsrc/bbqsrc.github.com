@@ -168,13 +168,13 @@
               <label for="row-{{rows.indexOf(row)}}">{{row.name}}</label>
             </th>
             <td>
-              <input data-ng-readonly="readOnlyCheck()"
-              type="number" min="0" max="{{getMaxWeight()}}" data-ng-model="row.weight"
+              <input data-ng-disabled="true || readOnlyCheck()"
+              type="range" min="0" max="{{getMaxWeight()}}" data-ng-model="row.weight"
               data-ng-change="swapWeight()">
             </td>
             <td class='dashed-right'>
-              <input data-ng-disabled="true || readOnlyCheck()"
-              type="range" min="0" max="{{getMaxWeight()}}" data-ng-model="row.weight"
+              <input data-ng-readonly="readOnlyCheck()"
+              type="number" min="0" max="{{getMaxWeight()}}" data-ng-model="row.weight"
               data-ng-change="swapWeight()">
             </td>
             <td data-ng-repeat="cell in row.cells">
