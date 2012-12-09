@@ -148,6 +148,10 @@
       $scope.readOnlyCheck = function() {
         return !$scope.writable || $scope.rows.indexOf(this.row) == parseInt($scope.selectedRow, 10);
       }
+
+      $scope.debug$rows = function() {
+        return JSON.stringify($scope.rows, undefined, 2);
+      }
     }
     </script>
   </head>
@@ -195,7 +199,7 @@
       </table>
       <div>
         <label><small>Debug</small> Rows data:<br>
-          <textarea readonly style="min-width: 550px; min-height: 200px">{{rows}}</textarea>
+          <textarea readonly style="min-width: 550px; min-height: 200px">{{debug$rows()}}</textarea>
         </label><br>
         <label><small>Debug</small> Selected criterion: 
           <input style="width: 50px" type='text' data-ng-model="selectedRow">
