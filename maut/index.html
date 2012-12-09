@@ -88,7 +88,7 @@
         var out = 0;
         for (var i = 0, ii = $scope.rows.length; i < ii; ++i) {
           for (var j = 0, jj = $scope.rows[i].cells.length; j < jj; ++j) {
-            if ($scope.rows[i].cells[j].criterion == this.col) {
+            if ($scope.rows[i].cells[j].solution == this.col) {
               out += $scope.rows[i].cells[j].value * $scope.rows[i].weight;
             }
           }
@@ -136,6 +136,8 @@
         if (c != $scope.getMaxWeight()) {
           console.log("!= $scope.getMaxWeight(): " + c);
           this.row.weight += $scope.getMaxWeight() - c;
+        } else {
+          this.row.weight = weight;
         }
       }
 
