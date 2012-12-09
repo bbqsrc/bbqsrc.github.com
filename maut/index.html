@@ -49,7 +49,7 @@
       $scope.root = $scope; // Hack to reveal root scope to repeats
       
       $scope.solutions = ["First", "Second", "Third", "Herp"];
-      $scope.criteria = ["Criteria 1", "Criteria 2", "Criteria 3", "Criteria 4", "Criteria 5"];
+      $scope.criteria = ["Criteria 1", "Criteria 2", "Criteria 3", "Criteria 4", "Criteria 5", 6, 7, 8, 9, 10];
       $scope.rows = [];
       $scope.weights = [];
 
@@ -148,6 +148,11 @@
         }
       }
 
+      $scope.normaliseScore = function() {
+        console.log(this);
+        this.cell.value = Math.max(0, Math.min(10, parseInt(this.cell.value, 10) || 0));
+      }
+
       $scope.readOnlyCheck = function() {
         return !$scope.writable || $scope.rows.indexOf(this.row) == parseInt($scope.selectedRow, 10);
       }
@@ -159,7 +164,11 @@
     </script>
   </head>
   <body data-ng-app="maut" data-ng-init="">
-    <h2>Table Example</h2>
+    <h1>MAUT Example</h1>
+    <p>This prototype assumes pretty good HTML5 compliance. Seems to only work properly in Chrome right now.</p>
+    <h2>Instructions</h2>
+    <p>Using the fields on the left, weight each criterion based on how important you feel they are relative to each other.</p>
+    <p>Score each solution compared against each criterion from 0 to 10, where 0 is meets criterion not at all, and 10 meets criterion fully.</p>
     <div id="table" data-ng-controller="TableController">
       <table>
         <thead>
@@ -172,7 +181,7 @@
           <tr data-ng-class="{selected: root.selectedRow == rows.indexOf(row)}" data-ng-repeat="row in rows">
             <td>
               <input type='radio' name='row' id='row-{{rows.indexOf(row)}}' value='{{rows.indexOf(row)}}' 
-              data-ng-model="root.selectedRow" data-ng-change="parseInt(root.selectedRow,10)">
+              data-ng-model="root.selectedRow">
             </td>
             <th>
               <label for="row-{{rows.indexOf(row)}}">{{row.criterion}}</label>
@@ -189,7 +198,8 @@
             </td>
             <td data-ng-repeat="cell in row.cells">
               <input data-ng-readonly="!writable" type="number" min="0" max="10" 
-              step="1" data-ng-model="cell.value">
+              step="1" data-ng-model="cell.value" data-ng-change="normaliseScore()"
+              ><!--onblur="this.value = Math.max(0, Math.min(10, this.value)); window.field = this"><-normaliseScore()"-->
             </td>
           </tr>
         </tbody>
