@@ -67,8 +67,6 @@
           $scope.rows.push({
             name: $scope.criteria[i],
             weight: w,
-            lastWeight: w,
-            isPegged: false, 
             cells: cells()
           });
         }
@@ -100,7 +98,6 @@
       
       $scope.swapWeight = function() {
         var weight = parseInt(this.row.weight, 10),
-            //lastWeight = parseInt(this.row.lastWeight, 10),
             otherRow = $scope.rows[$scope.selectedRow],
             diff, offset = 0, i, ii, c = 0;
 
