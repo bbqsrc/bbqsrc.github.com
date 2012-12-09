@@ -42,7 +42,7 @@
         border-color: transparent;
       }
     </style>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/json3/3.2.4/json3.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/json3/3.2.4/json3.min.js"></script>
     <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.0.3/angular.min.js"></script>
     <script>
     function TableController($scope) {
@@ -105,7 +105,10 @@
         var weight = parseInt(this.row.weight, 10),
             otherRow = $scope.rows[$scope.selectedRow],
             diff, offset = 0, i, ii, c = 0;
-
+        
+        // Ensure int
+        this.row.weight = weight;
+        
         // Normalise weight
         if (!isFinite(weight) || weight < 0) {
           this.row.weight = weight = 0;
@@ -115,7 +118,7 @@
 
         // Count all of the things!
         for (i = 0, ii = $scope.rows.length; i < ii; ++i) {
-          c += $scope.rows[i].weight;
+          c += parseInt($scope.rows[i].weight, 10);
         }
         diff = $scope.getMaxWeight() - c;
 
@@ -135,11 +138,10 @@
         // Check that we didn't over or underflow
         c = 0;
         for (i = 0, ii = $scope.rows.length; i < ii; ++i) {
-          c += $scope.rows[i].weight;
+          c += parseInt($scope.rows[i].weight, 10);
         }
 
         if (c != $scope.getMaxWeight()) {
-          console.log("!= $scope.getMaxWeight(): " + c);
           this.row.weight += $scope.getMaxWeight() - c;
         } else {
           this.row.weight = weight;
@@ -176,7 +178,7 @@
               <label for="row-{{rows.indexOf(row)}}">{{row.criterion}}</label>
             </th>
             <td>
-              <input data-ng-disabled="true || readOnlyCheck()"
+              <input data-ng-disabled="readOnlyCheck()"
               type="range" min="0" max="{{getMaxWeight()}}" data-ng-model="row.weight"
               data-ng-change="swapWeight()">
             </td>
