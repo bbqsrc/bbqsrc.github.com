@@ -15,6 +15,18 @@
       tfoot {
         text-align: right;
       }
+      
+      .dashed-right {
+        border-right: 1px dashed black;
+      }
+
+      [id*='row'], [for*='row'] {
+        cursor: pointer;
+      }
+
+      td {
+        padding: 0.3em;
+      }
 
       input[type='number'] {
         text-align: right;
@@ -29,16 +41,19 @@
     <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.0.3/angular.min.js"></script>
     <script>
     function TableController($scope) {
+      $scope.root = $scope; // Hack to reveal root scope to repeats
+      
       $scope.solutions = ["First", "Second", "Third", "Herp"];
       $scope.criteria = ["Criteria 1", "Criteria 2", "Criteria 3", "Criteria 4", "Criteria 5"];
       $scope.rows = [];
       $scope.weights = [];
 
       $scope.writable = true;
+      $scope.selectedRow = 0;
 
       {
         var column, i, ii, cells,
-            w = 100 / $scope.criteria.length;
+            w = 5;//100 / $scope.criteria.length;
 
         cells = function() {
           var x = [];
@@ -67,25 +82,11 @@
         return (comp + $scope.remainingScore > $scope.remainingScore ? comp : 0) + $scope.remainingScore;
       }
       
-      /*
-      $scope.weightMeBro = function() {
-        this.row.weight = parseInt(this.row.weight, 10);
-        this.row.lastWeight = parseInt(this.row.lastWeight, 10) || this.row.weight;
-
-        var split = $scope.criteria.length - 1,
-            diff = (this.row.lastWeight - this.row.weight) * 100 / split / 100;
-        this.row.lastWeight = this.row.weight;
-        
-        for (var i = 0, ii = $scope.rows.length; i < ii; ++i) {
-          if ($scope.rows[i] != this.row) {
-            console.log($scope.rows[i]);
-            $scope.rows[i].weight += diff;
-          }
-        }
+      $scope.getMaxWeight = function() {
+        return 5 * $scope.criteria.length;
       }
-      */
 
-      $scope.gimmeMahTotalBro = function() {
+      $scope.columnTotal = function() {
         var out = 0;
         for (var i = 0, ii = $scope.rows.length; i < ii; ++i) {
           for (var j = 0, jj = $scope.rows[i].cells.length; j < jj; ++j) {
@@ -96,89 +97,85 @@
         }
         return out;
       }
-
-      $scope.normaliseWeights = function() {
-        var weight = parseFloat(this.row.weight),
-            lastWeight = parseFloat(this.row.lastWeight),
-            split = $scope.criteria.length - 1,
+      
+      $scope.swapWeight = function() {
+        var weight = parseInt(this.row.weight, 10),
+            //lastWeight = parseInt(this.row.lastWeight, 10),
+            otherRow = $scope.rows[$scope.selectedRow],
             diff, offset = 0, i, ii, c = 0;
-        
-        // ensure they aren't strings, ever
-        this.row.weight = weight;
-        this.row.lastWeight = lastWeight;
 
-        // Ignore pegged
+        // Normalise weight
+        if (!isFinite(weight) || weight < 0) {
+          this.row.weight = weight = 0;
+        } else if (weight > $scope.getMaxWeight()) {
+          this.row.weight = weight = $scope.getMaxWeight();
+        }
+
+        // Count all of the things!
         for (i = 0, ii = $scope.rows.length; i < ii; ++i) {
-          if ($scope.rows[i] != this.row && $scope.rows[i].isPegged) {
-            split -= 1;
-          }
+          c += $scope.rows[i].weight;
         }
-
-        // Check for potential for all pegged and no movement possible
-        if (split == 0) {
-          this.row.weight = lastWeight;
-          return;
-        }
+        diff = $scope.getMaxWeight() - c;
 
         // Find all the ones too close to zero to fairly distribute
-        diff = (lastWeight - weight) * 100 / split / 100;
-        console.log(lastWeight, weight, diff);
-        for (i = 0, ii = $scope.rows.length; i < ii; ++i) {
-          
-          if ($scope.rows[i] != this.row && !$scope.rows[i].isPegged) {
-            if ($scope.rows[i].weight + diff < 0) {
-              console.log("<0 - " + $scope.rows[i].weight + " - " + diff);
-              offset += diff; //$scope.rows[i].weight;
-              $scope.rows[i].weight = $scope.rows[i].lastWeight = 0;
-            }
-          }
-        }
-        diff += offset;
+        console.log(c, weight, diff);
 
-        console.log("diff: " + diff);
-        // Now split the ones who are left with the adjusted value
-        for (i = 0, ii = $scope.rows.length; i < ii; ++i) {
-          if ($scope.rows[i] != this.row && !$scope.rows[i].isPegged && $scope.rows[i].weight + diff >= 0 && $scope.rows[i].weight + diff <= 100) {
-            $scope.rows[i].weight += diff;
-            $scope.rows[i].lastWeight = $scope.rows[i].weight;
-          }
+        // Bail out if other row is unselected somehow
+        if (otherRow == null) {
+          this.row.weight += $scope.getMaxWeight() - c;
+          return;
+        } else if (otherRow.weight + diff < 0) {
+          otherRow.weight = 0;
+        } else {
+          otherRow.weight += diff;
         }
 
         // Check that we didn't over or underflow
+        c = 0;
         for (i = 0, ii = $scope.rows.length; i < ii; ++i) {
           c += $scope.rows[i].weight;
         }
 
-        if (c != 100) {
-          console.log(c);
-          this.row.weight = weight = lastWeight;
+        if (c != $scope.getMaxWeight()) {
+          console.log("!= $scope.getMaxWeight(): " + c);
+          this.row.weight += $scope.getMaxWeight() - c;
         }
-        this.row.lastWeight = weight;
+      }
+
+      $scope.readOnlyCheck = function() {
+        return !$scope.writable || $scope.rows.indexOf(this.row) == parseInt($scope.selectedRow, 10);
       }
     }
     </script>
   </head>
-  <body>
+  <body data-ng-app="maut" data-ng-init="">
     <h2>Table Example</h2>
     <div id="table" data-ng-controller="TableController">
       <table>
         <thead>
           <tr>
-            <td colspan='2'></td>
+            <td colspan='4' style='color: gray' class='dashed-right'><small>Sliders are disabled due to a bug.</small></td>
             <th data-ng-repeat="header in solutions">{{header}}</th>
           </tr>
         </thead>
         <tbody>
           <tr data-ng-repeat="row in rows">
-            <th>{{row.name}}</th>
-            <td style="border-right: 1px dotted black">
-              <input type='checkbox' data-ng-model='row.isPegged'>
-              <input data-ng-disabled="!writable || row.isPegged"
-              type="range" min="0" max="100" data-ng-model="row.weight"
-              data-ng-change="normaliseWeights()">
-              <input data-ng-readonly="!writable || row.isPegged"
-              type="number" min="0" max="100" data-ng-model="row.weight"
-              data-ng-change="normaliseWeights()">
+            <td>
+              <input type='radio' name='row' id='row-{{rows.indexOf(row)}}' value='{{rows.indexOf(row)}}' 
+              data-ng-model="root.selectedRow" data-ng-change="parseInt(root.selectedRow,10)">
+            </td>
+            <th>
+              <label for="row-{{rows.indexOf(row)}}">{{row.name}}</label>
+            </th>
+            <td>
+              <input data-ng-readonly="readOnlyCheck()"
+              type="number" min="0" max="{{getMaxWeight()}}" data-ng-model="row.weight"
+              data-ng-change="swapWeight()">
+            </td>
+            <td class='dashed-right'>
+              <input data-ng-disabled="true || readOnlyCheck()"
+              type="range" min="0" max="{{getMaxWeight()}}" data-ng-model="row.weight"
+              data-ng-change="swapWeight()">
             </td>
             <td data-ng-repeat="cell in row.cells">
               <input data-ng-readonly="!writable" type="number" min="0" max="10" 
@@ -188,13 +185,20 @@
         </tbody>
         <tfoot>
           <tr>
-            <td colspan="2">Total:</td>
-            <td data-ng-repeat="col in solutions">{{gimmeMahTotalBro()}}</td>
+            <td colspan="4" class='dashed-right'>Total</td>
+            <td data-ng-repeat="col in solutions">{{columnTotal()}}</td>
           </tr>
         </tfoot>
       </table>
-      <button data-ng-click="toggleWritable()">Toggle Readonly</button><br>
-      <textarea>{{rows}}</textarea>
+      <div>
+        <label><small>Debug</small> Rows data:<br>
+          <textarea readonly style="min-width: 550px; min-height: 200px">{{rows}}</textarea>
+        </label><br>
+        <label><small>Debug</small> Selected criterion: 
+          <input style="width: 50px" type='text' data-ng-model="selectedRow">
+        </label><br>
+        <button data-ng-click="toggleWritable()">Toggle Readonly</button><br>
+      </div>  
     </div>
   </body>
 </html>
