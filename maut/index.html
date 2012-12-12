@@ -139,7 +139,7 @@
             --excess;
           }
         }
-        
+        console.log(rows);
         return rows;
       }
 
@@ -162,6 +162,8 @@
       }
 
       $scope.swapWeight = function() {
+        // input type range passes a string instead of a number... wtf
+        this.row.weight = parseInt(this.row.weight, 10);
         setWeights(calculateWeights($scope.rows.indexOf(this.row), getSelectedRows(), getRowWeights()));
       }
 
