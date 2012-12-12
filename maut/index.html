@@ -139,7 +139,7 @@
             --excess;
           }
         }
-        console.log(rows);
+        
         return rows;
       }
 
@@ -168,7 +168,6 @@
       }
 
       $scope.normaliseScore = function() {
-        console.log(this);
         this.cell.value = Math.max(0, Math.min(10, parseInt(this.cell.value, 10) || 0));
       }
 
