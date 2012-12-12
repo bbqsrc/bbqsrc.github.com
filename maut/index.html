@@ -159,16 +159,6 @@
         return out;
       }
 
-      function getUnselectedTotal(changedRow) {
-        var i, ii, out = 0;
-        for (i = 0, ii = $scope.rows.length; i < ii; ++i) {
-          if (!$scope.rows[i].selected) {
-            out += $scope.rows[i].weight;
-          }
-        }
-        return out;
-      }
-
       function getRowWeights() {
         var i, ii, out = [];
         for (i = 0, ii = $scope.rows.length; i < ii; ++i) {
