@@ -179,8 +179,8 @@
 
       $scope.swapWeight = function() {
         // input type range passes a string instead of a number... wtf
-        this.row.weight = parseInt(this.row.weight, 10);
-        setWeights(calculateWeights($scope.rows.indexOf(this.row)));//, getSelectedRows(), getRowWeights()));
+        this.row.weight = parseInt(this.row.weight, 10) || 0;
+        setWeights(calculateWeights($scope.rows.indexOf(this.row)));
       }
 
       $scope.normaliseScore = function() {
