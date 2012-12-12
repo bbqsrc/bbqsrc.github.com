@@ -79,12 +79,16 @@
         $scope.writable = !$scope.writable;
       }
 
-      $scope.getMax = function(comp) {
-        return (comp + $scope.remainingScore > $scope.remainingScore ? comp : 0) + $scope.remainingScore;
+      $scope.getMinWeight = function() {
+        return parseInt(this.row.weight, 10) % $scope.getWeightStep();
       }
       
       $scope.getMaxWeight = function() {
         return 5 * $scope.criteria.length;
+      }
+
+      $scope.getWeightStep = function() {
+        return getSelectedRows().length || 1;
       }
 
       $scope.columnTotal = function() {
@@ -105,42 +109,44 @@
         }
       }
 
-      function calculateWeights(changedRow, selectedRows, rows) {
-        var used = 0,
-            available,
-            split, excess,
-            i, ii;
+      function getTotalWeight() {
+        var i, ii, out = 0;
+        for (i = 0, ii = $scope.rows.length; i < ii; ++i) {
+          out += $scope.rows[i].weight;
+        }
+        return out;
+      }
 
-        for (i = 0, ii = rows.length; i < ii; ++i) {
-          if (i == changedRow) {
-            continue;
-          }
-      
-          if (selectedRows.indexOf(i) == -1) {
-            used += parseInt(rows[i], 10);
-          } else {
-            rows[i] = 0;
-          }
-        }
-      
-        available = $scope.getMaxWeight() - rows[changedRow] - used;
-        if (available < 0 || selectedRows.length == 0) {
-          rows[changedRow] += available;
-          return rows;
-        }
-      
-        split = parseInt(available / selectedRows.length, 10);
-        excess = available % selectedRows.length;
-      
-        for (i = 0, ii = selectedRows.length; i < ii; ++i) {
-          rows[selectedRows[i]] = split;
-          if (excess > 0) {
-            rows[selectedRows[i]] += 1;
-            --excess;
-          }
-        }
+      function calculateWeights(changedRow) {
+        var weights, selectedRows, available, split;
         
-        return rows;
+        weights = getRowWeights();
+        selectedRows = getSelectedRows();
+        available = $scope.getMaxWeight() - getTotalWeight();
+
+        if (selectedRows.length == 0) {
+          weights[changedRow] += available;
+          return weights;
+        }
+
+        split = available / selectedRows.length;
+        if (split != parseInt(split, 10)) {
+          weights[changedRow] += available;
+          return weights;
+        }
+
+        for (i = selectedRows.length-1; i >= 0; --i) {
+          if (weights[selectedRows[i]] + split < 0) {
+            selectedRows.splice(i, 1);
+            weights[changedRow] += split;
+          }
+        }
+
+        for (i = 0, ii = selectedRows.length; i < ii; ++i) {
+          weights[selectedRows[i]] += split;
+        }
+
+        return weights;
       }
 
       function getSelectedRows() {
@@ -148,6 +154,16 @@
         for (i = 0, ii = $scope.rows.length; i < ii; ++i) {
           if ($scope.rows[i].selected) {
             out.push(i);
+          }
+        }
+        return out;
+      }
+
+      function getUnselectedTotal(changedRow) {
+        var i, ii, out = 0;
+        for (i = 0, ii = $scope.rows.length; i < ii; ++i) {
+          if (!$scope.rows[i].selected) {
+            out += $scope.rows[i].weight;
           }
         }
         return out;
@@ -164,7 +180,7 @@
       $scope.swapWeight = function() {
         // input type range passes a string instead of a number... wtf
         this.row.weight = parseInt(this.row.weight, 10);
-        setWeights(calculateWeights($scope.rows.indexOf(this.row), getSelectedRows(), getRowWeights()));
+        setWeights(calculateWeights($scope.rows.indexOf(this.row)));//, getSelectedRows(), getRowWeights()));
       }
 
       $scope.normaliseScore = function() {
@@ -205,17 +221,17 @@
             </th>
             <td>
               <input data-ng-disabled="readOnlyCheck()"
-              type="range" min="0" max="{{getMaxWeight()}}" data-ng-model="row.weight"
-              data-ng-change="swapWeight()">
+              type="range" min="{{getMinWeight()}}" max="{{getMaxWeight()}}" step="{{getWeightStep()}}"
+              data-ng-model="row.weight" data-ng-change="swapWeight()">
             </td>
             <td class='dashed-right'>
               <input data-ng-readonly="readOnlyCheck()"
-              type="number" min="0" max="{{getMaxWeight()}}" data-ng-model="row.weight"
-              data-ng-change="swapWeight()">
+              type="number" min="{{getMinWeight()}}" max="{{getMaxWeight()}}" step="{{getWeightStep()}}"
+              data-ng-model="row.weight" data-ng-change="swapWeight()">
             </td>
             <td data-ng-repeat="cell in row.cells">
               <input data-ng-readonly="!writable" type="number" min="0" max="10" 
-              step="1" data-ng-model="cell.value" data-ng-change="normaliseScore()">
+              data-ng-model="cell.value" data-ng-change="normaliseScore()">
             </td>
           </tr>
         </tbody>
