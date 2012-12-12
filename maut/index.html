@@ -80,7 +80,7 @@
       }
 
       $scope.getMinWeight = function() {
-        return parseInt(this.row.weight, 10) % $scope.getWeightStep();
+        return (this.row && this.row.selected) ? 0 : (parseInt(this.row.weight, 10) % $scope.getWeightStep());
       }
       
       $scope.getMaxWeight = function() {
@@ -88,7 +88,7 @@
       }
 
       $scope.getWeightStep = function() {
-        return getSelectedRows().length || 1;
+        return (this.row && this.row.selected) ? 1 : (getSelectedRows().length || 1);
       }
 
       $scope.columnTotal = function() {
@@ -214,7 +214,7 @@
         <tbody>
           <tr data-ng-class="{selected: row.selected}" data-ng-repeat="row in rows">
             <td>
-              <input type='checkbox' name='row' id='row-{{rows.indexOf(row)}}' data-ng-change="lastRow = 0" data-ng-model="row.selected">
+              <input type='checkbox' name='row' id='row-{{rows.indexOf(row)}}' data-ng-model="row.selected">
             </td>
             <th>
               <label for="row-{{rows.indexOf(row)}}">{{row.criterion}}</label>
