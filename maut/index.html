@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html data-ng-app>
+<html data-ng-app="maut" data-ng-init="">
   <head>
     <title>Angular Table Example</title>
     <meta charset="utf-8">
@@ -20,9 +20,9 @@
         border-right: 1px dashed black;
       }
 
-      .selected {
+      /*.selected {
         background-color: #f9f9f9;
-      }
+      }*/
 
       [id*='row'], [for*='row'] {
         cursor: pointer;
@@ -35,21 +35,192 @@
       input[type='number'] {
         text-align: right;
         box-sizing: border-box;
-        width: 100%;
+        width: 3em;
       }
 
       input[readonly] {
         border-color: transparent;
       }
+
+      .ui-spinner-disabled {
+        opacity: 1 !important;
+        border-color: #ddd !important;
+      }
+
+      .ui-widget {
+        font-size: 1em !important;
+      }
+
+      .ui-slider {
+        width: 200px;
+      }
+
+      .ui-spinner-input {
+        font-size: 12px !important;
+        line-height: 12px !important;
+        width: 2em !important;
+      }
+
+      .ui-widget.ui-slider {
+        font-size: 12px !important;
+        margin-left: 0.5em;
+        margin-right: 0.5em;
+      }
+
+      .ui-slider-handle,
+      .ui-button-text * {
+        -moz-user-select: none; 
+        -khtml-user-select: none; 
+        -webkit-user-select: none; 
+        user-select: none;
+        
+        -moz-user-drag: -moz-none;
+        -webkit-user-drag: none; 
+        user-drag: none;
+      }
+
+      .ui-spinner-input::-webkit-outer-spin-button,
+      .ui-spinner-input::-webkit-inner-spin-button {
+        display: none;
+      }
     </style>
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css">
+    <script src="http://code.jquery.com/jquery-1.8.3.js"></script>
+    <script src="http://code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
     <script src="http://cdnjs.cloudflare.com/ajax/libs/json3/3.2.4/json3.min.js"></script>
-    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.0.3/angular.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/angular.js/1.0.3/angular.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
     <script>
+var module = angular.module("maut", []);
+
+module.directive('uiSlider', function factory() {
+  var definition, div;
+  
+  definition = {
+    scope: true,
+    require:'ngModel',
+    compile: function compile(element, attrs, ctrl) {
+      if (attrs.uiSlider == "polyfill" && Modernizr.inputtypes.number) {
+        return;
+      }
+
+      return {
+        pre: function(scope, element, attrs, ctrl) {
+          var sliderDiv = div;
+          
+          sliderDiv = $(document.createElement('div'));
+          sliderDiv.insertAfter(element[0]);
+          sliderDiv.slider({
+            slide: function(event, ui) {
+              scope.$apply(function() {
+                ctrl.$setViewValue(ui.value);
+              });
+            }
+          });
+          
+          element[0].style.display = "none";
+          div = sliderDiv;
+        },  
+
+        post: function(scope, element, attrs, ctrl) {
+          var sliderDiv = div;
+          
+          attrs.$observe("min", function(value) {
+            if (value != null) { 
+              sliderDiv.slider("option", "min", parseInt(value, 10));
+            }
+          });
+          
+          attrs.$observe("max", function(value) {
+            if (value != null) { 
+              sliderDiv.slider("option", "max", parseInt(value, 10));
+            }
+          });
+          
+          attrs.$observe("step", function(value) {
+            if (value != null) { 
+              sliderDiv.slider("option", "step", parseInt(value, 10));
+            }
+          });
+
+          attrs.$observe("disabled", function(value) {
+            sliderDiv.slider(value ? "disable" : "enable");
+            if (value) {
+              sliderDiv.find("a").attr('tabindex', -1);
+            } else {
+              sliderDiv.find("a").removeAttr('tabindex');
+            }
+          });
+
+          scope.$watch(function() { return scope.$eval(attrs.ngModel) }, function(value) {
+            if (value != null) { 
+              sliderDiv.slider("value", parseInt(value, 10));
+            }
+          });
+        }
+      };
+    }
+  };
+  return definition;
+});
+
+module.directive('uiSpinner', function factory() {
+    var definition;
+
+    definition = {
+      require: "ngModel",
+      scope: true,
+      link: function postLink(scope, element, attrs, ctrl) {
+        if (attrs.uiSpinner == "polyfill" && Modernizr.inputtypes.number) {
+          return;
+        }
+        
+        element.spinner({
+          spin: function(event, ui) {
+            scope.$apply(function() {
+              ctrl.$setViewValue(ui.value);
+            });
+          } 
+        });
+        
+        attrs.$observe("readonly", function(value) {
+          element.spinner(value ? "disable" : "enable");
+        });
+        
+        attrs.$observe("min", function(value) {
+          if (value != null) { 
+            element.spinner("option", "min", parseInt(value, 10));
+          }
+        });
+          
+        attrs.$observe("max", function(value) {
+          if (value != null) { 
+            element.spinner("option", "max", parseInt(value, 10));
+          }
+        });
+        
+        attrs.$observe("step", function(value) {
+          if (value != null) { 
+            element.spinner("option", "step", parseInt(value, 10));
+          }
+        });
+
+        scope.$watch(function() { return scope.$eval(attrs.ngModel) }, function(value) {
+          if (value != null) { 
+            element.spinner("value", parseInt(value, 10));
+          }
+        });
+      }
+    };
+
+    return definition;
+});
+
     function TableController($scope) {
       $scope.root = $scope; // Hack to reveal root scope to repeats
       
       $scope.solutions = ["First", "Second", "Third", "Herp"];
-      $scope.criteria = ["Criteria 1", "Criteria 2", "Criteria 3", "Criteria 4", "Criteria 5"];
+      $scope.criteria = ["Criteria 1", "Criteria 2", "Criteria 3", "Criteria 4", "Criteria 5"/*, "6", "7", "8", "9", "10"*/];
       $scope.rows = [];
       $scope.weights = [];
 
@@ -79,6 +250,21 @@
         $scope.writable = !$scope.writable;
       }
 
+      $scope.getAvailableWeight = function() {
+        var i, ii, out = parseInt(this.row.weight, 10);
+        
+        if (this.row && this.row.selected || getSelectedRows().length == 0) {
+          return $scope.getMaxWeight();
+        }
+        
+        for (i = 0, ii = $scope.rows.length; i < ii; ++i) {
+          if ($scope.rows[i].selected) {
+            out += parseInt($scope.rows[i].weight, 10);
+          }
+        }
+        return out;
+      }
+
       $scope.getMinWeight = function() {
         return (this.row && this.row.selected) ? 0 : (parseInt(this.row.weight, 10) % $scope.getWeightStep());
       }
@@ -88,7 +274,20 @@
       }
 
       $scope.getWeightStep = function() {
-        return (this.row && this.row.selected) ? 1 : (getSelectedRows().length || 1);
+        if (this.row && this.row.selected) {
+          return 1;
+        } else {
+          return getSelectedRows().length || 1;
+        }
+        
+        var rows = getSelectedRows(),
+            step = 0;
+        for (var i = 0, ii = rows.length; i < ii; ++i) {
+          if ($scope.rows[rows[i]].weight > 0) {
+            step += 1;
+          }
+        }
+        return step || 1;
       }
 
       $scope.columnTotal = function() {
@@ -178,7 +377,7 @@
       }
 
       $scope.readOnlyCheck = function() {
-        return !$scope.writable || this.row.selected;
+        return !$scope.writable || this.row.selected || getSelectedRows().length == 0;
       }
 
       $scope.debug$rows = function() {
@@ -187,7 +386,7 @@
     }
     </script>
   </head>
-  <body data-ng-app="maut" data-ng-init="">
+  <body>
     <h1>MAUT Example</h1>
     <p>This prototype assumes pretty good HTML5 compliance. Seems to only work properly in Chrome right now.</p>
     <h2>Instructions</h2>
@@ -210,17 +409,17 @@
               <label for="row-{{rows.indexOf(row)}}">{{row.criterion}}</label>
             </th>
             <td>
-              <input data-ng-disabled="readOnlyCheck()"
-              type="range" min="{{getMinWeight()}}" max="{{getMaxWeight()}}" step="{{getWeightStep()}}"
+              <input data-ui-slider data-ng-disabled="readOnlyCheck()"
+              type="range" min="{{getMinWeight()}}" max="{{getAvailableWeight()}}" step="{{getWeightStep()}}"
               data-ng-model="row.weight" data-ng-change="swapWeight()">
             </td>
             <td class='dashed-right'>
               <input data-ng-readonly="readOnlyCheck()"
-              type="number" min="{{getMinWeight()}}" max="{{getMaxWeight()}}" step="{{getWeightStep()}}"
+              type="number" min="{{getMinWeight()}}" max="{{getAvailableWeight()}}" step="{{getWeightStep()}}"
               data-ng-model="row.weight" data-ng-change="swapWeight()">
             </td>
             <td data-ng-repeat="cell in row.cells">
-              <input data-ng-readonly="!writable" type="number" min="0" max="10" 
+              <input data-ui-spinner data-ng-readonly="!writable" type="number" min="0" max="10" 
               data-ng-model="cell.value" data-ng-change="normaliseScore()">
             </td>
           </tr>
