@@ -38,7 +38,6 @@ $(function() {
     $('[data-i18n]').each(function() {
       var key = $(this).attr('data-i18n'),
           value = i18n.translate(key).fetch();
-      console.log(key, value)
       $(this).text(value);
     });
   }).change();
