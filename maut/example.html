@@ -83,6 +83,8 @@
       .ui-spinner-input::-webkit-inner-spin-button {
         display: none;
       }
+
+      .centre { text-align: center; }
     </style>
     <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css">
     <script src="http://code.jquery.com/jquery-1.8.3.js"></script>
@@ -219,8 +221,8 @@ module.directive('uiSpinner', function factory() {
     function TableController($scope) {
       $scope.root = $scope; // Hack to reveal root scope to repeats
       
-      $scope.solutions = ["First", "Second", "Third", "Herp"];
-      $scope.criteria = ["Criteria 1", "Criteria 2", "Criteria 3", "Criteria 4", "Criteria 5"/*, "6", "7", "8", "9", "10"*/];
+      $scope.solutions = ["Current Situation", "Moratorium in prime agriculture / national parks", "Full moratorium", "Ban on CSG in prime agriculture / national parks", "Full ban on CSG"];
+      $scope.criteria = ["Farmer's rights", "Retention of arable land", "Retention of habitat", "Groundwater damage", "Fugitive emissions", "Mining profit/revenue", "Emissions reductions", "Protect our drinkable water supply"];
       $scope.rows = [];
       $scope.weights = [];
 
@@ -397,7 +399,7 @@ module.directive('uiSpinner', function factory() {
         <thead>
           <tr>
             <td colspan='4' style='color: gray' class='dashed-right'><small>Total available weight: {{getMaxWeight()}}</small></td>
-            <th data-ng-repeat="header in solutions">{{header}}</th>
+            <th style="padding: 0 1em" data-ng-repeat="header in solutions">{{header}}</th>
           </tr>
         </thead>
         <tbody>
@@ -418,7 +420,7 @@ module.directive('uiSpinner', function factory() {
               type="number" min="{{getMinWeight()}}" max="{{getAvailableWeight()}}" step="{{getWeightStep()}}"
               data-ng-model="row.weight" data-ng-change="swapWeight()">
             </td>
-            <td data-ng-repeat="cell in row.cells">
+            <td class="centre" data-ng-repeat="cell in row.cells">
               <input data-ui-spinner data-ng-readonly="!writable" type="number" min="0" max="10" 
               data-ng-model="cell.value" data-ng-change="normaliseScore()">
             </td>
@@ -427,7 +429,7 @@ module.directive('uiSpinner', function factory() {
         <tfoot>
           <tr>
             <td colspan="4" class='dashed-right'>Total</td>
-            <td data-ng-repeat="col in solutions">{{columnTotal()}}</td>
+            <td class='centre' data-ng-repeat="col in solutions">{{columnTotal()}}</td>
           </tr>
         </tfoot>
       </table>
@@ -445,4 +447,5 @@ module.directive('uiSpinner', function factory() {
     </div>
   </body>
 </html>
+
 
