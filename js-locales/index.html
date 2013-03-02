@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Locale Test</title>
+    <script src="jed.js"></script>
+    <script src="../jquery-1.7.2.min.js"></script>
+    <script src='i18n.js'></script>
+    <style>label { display: block }</style>
+  </head>
+  <body>
+    <select id='locale'>
+      <option selected value="en">English</option>
+      <option value="fr">français</option>
+    </select>
+
+    <form>
+      <label data-i18n="label_first_field" for="f1"></label>
+      <input type='text' id='f1'>
+      <label data-i18n="label_second_field" for="f1"></label>
+      <input type='text' id='f1'>
+      <label data-i18n="label_third_field" for="f1"></label>
+      <input type='text' id='f1'>
+    </form>
+  </body>
+</html>
